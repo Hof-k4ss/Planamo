@@ -1,0 +1,22 @@
+#!/bin/bash
+set -e
+
+echo "=== Installing Mobile Forensics Tools ==="
+
+apt install -y \
+    adb \
+    fastboot \
+    android-sdk-platform-tools \
+    androguard \
+    apktool \
+    radare2 \
+    binwalk \
+    sleuthkit \
+    libimage-exiftool-perl \
+    sqlitebrowser \
+    python3-pip \
+    git \
+    curl \
+    wget
+
+apt clean
