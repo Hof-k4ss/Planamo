@@ -32,6 +32,9 @@ sudo cp -r scripts/chroot/modules/* "$ROOTFS/root/modules/"
 sudo cp scripts/chroot/main.sh "$ROOTFS/root/main.sh"
 sudo cp -r outils "$ROOTFS/root/"
 
+# Création des thèmes
+cp scripts/chroot/tools_map.conf "$ROOTFS/root/tools_map.conf"
+
 echo "Entrée dans le chroot..."
 sudo chroot "$ROOTFS" /bin/bash /root/main.sh
 

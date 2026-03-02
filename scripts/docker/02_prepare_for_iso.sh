@@ -2,11 +2,11 @@
 set -e
 
 WORKDIR="$(pwd)/work"
-ROOTFS="$WORKDIR/planamo-root"
+ISOROOT="$WORKDIR/iso"
 
-echo "=== Copying Docker images into ISO rootfs ==="
+echo "=== Copying Docker images into ISO (outside squashfs) ==="
 
-sudo mkdir -p "$ROOTFS/opt/planamo/docker-images"
-sudo cp docker-images/*.tar "$ROOTFS/opt/planamo/docker-images/"
+sudo mkdir -p "$ISOROOT/docker-images"
+sudo cp docker-images/*.tar "$ISOROOT/docker-images/"
 
-echo "=== Docker images copied ==="
+echo "=== Docker images copied into ISO root ==="

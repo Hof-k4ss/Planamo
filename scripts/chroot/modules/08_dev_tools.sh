@@ -41,6 +41,7 @@ apt install -y \
     docker-compose-plugin
 
 systemctl enable docker
+usermod -aG docker analyste
 
 # ------------------------
 # VS Code Official Repo

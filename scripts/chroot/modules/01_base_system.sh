@@ -32,7 +32,9 @@ apt install -y \
     wireless-tools \
     wpasupplicant \
     linux-firmware \
-    ca-certificates
+    ca-certificates \
+    firefox \
+    htop
 
 # -----------------------
 # Hostname
@@ -84,4 +86,5 @@ EOF
 # -----------------------
 systemctl enable NetworkManager
 
+apt upgrade -y
 apt clean
