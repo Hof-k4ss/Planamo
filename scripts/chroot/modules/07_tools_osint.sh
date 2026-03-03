@@ -7,7 +7,7 @@ echo "=== Installing OSINT tools ==="
 apt update
 
 apt install -y \
-  firefox \
+  firefox-esr \
   chromium-browser \
   tor \
   torsocks \

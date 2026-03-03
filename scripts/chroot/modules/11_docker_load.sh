@@ -85,3 +85,28 @@ main "$@"
 EOF
 
 chmod +x /usr/local/bin/planamo-docker-load
+
+# --- Wrapper MobSF ---
+cat <<'EOF' > /usr/local/bin/mobsf
+#!/bin/bash
+set -e
+
+# Démarre MobSF (assume image déjà loadée)
+docker rm -f mobsf 2>/dev/null || true
+docker run -d -p 8000:8000 --name mobsf opensecurity/mobile-security-framework-mobsf:latest
+
+sleep 5
+firefox http://127.0.0.1:8000 >/dev/null 2>&1 || true
+echo "[+] MobSF running: http://127.0.0.1:8000"
+EOF
+chmod +x /usr/local/bin/mobsf
+
+# --- Wrapper REMnux ---
+cat <<'EOF' > /usr/local/bin/remnux
+#!/bin/bash
+set -e
+
+# Shell interactif dans REMnux (assume image déjà loadée)
+docker run --rm -it remnux/remnux-distro:latest bash
+EOF
+chmod +x /usr/local/bin/remnux
