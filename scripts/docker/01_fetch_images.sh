@@ -13,7 +13,6 @@ mkdir -p "$LOGDIR"
 
 IMAGES=(
   "opensecurity/mobile-security-framework-mobsf:latest"
-  "remnux/remnux-distro:latest"
 )
 
 MAX_JOBS=2

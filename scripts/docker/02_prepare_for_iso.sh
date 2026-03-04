@@ -1,12 +1,14 @@
-#!/bin/bash
-set -e
+echo "=== Splitting docker tar files > 4GiB for ISO9660 ==="
 
-WORKDIR="$(pwd)/work"
-ISOROOT="$WORKDIR/iso"
+TARGET_DIR="$WORKDIR/iso/docker-images"
 
-echo "=== Copying Docker images into ISO (outside squashfs) ==="
+# 3.9G pour rester safe sous 4GiB
+SPLIT_SIZE="3900m"
 
-sudo mkdir -p "$ISOROOT/docker-images"
-sudo cp docker-images/*.tar "$ISOROOT/docker-images/"
+find "$TARGET_DIR" -maxdepth 1 -type f -name "*.tar" -size +4096M -print0 | while IFS= read -r -d '' tar; do
+  echo "[*] Splitting: $tar"
+  split -b "$SPLIT_SIZE" -d -a 3 "$tar" "${tar}.part-"
+  rm -f "$tar"
+done
 
-echo "=== Docker images copied into ISO root ==="
+echo "=== Split done ==="
