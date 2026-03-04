@@ -87,13 +87,13 @@ mkdir -p /opt/tor-browser
 tar -xJf torbrowser.tar.xz -C /opt/tor-browser --strip-components=1
 rm -f torbrowser.tar.xz
 
-ln -sf /opt/tor-browser/start-tor-browser /usr/local/bin/tor-browser
+ln -sf /opt/tor-browser/Browser/start-tor-browser /usr/local/bin/tor-browser
 
 cat > /usr/share/applications/tor-browser.desktop <<'EOF'
 [Desktop Entry]
 Name=Tor Browser
-Exec=/opt/tor-browser/start-tor-browser --detach
-Icon=/opt/tor-browser/browser/chrome/icons/default/default128.png
+Exec=/opt/tor-browser/Browser/start-tor-browser --detach
+Icon=/opt/tor-browser/Browser/browser/chrome/icons/default/default128.png
 Terminal=false
 Type=Application
 Categories=Network;

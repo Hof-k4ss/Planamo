@@ -76,3 +76,49 @@ EOF
 fi
 
 echo "=== PLANAMO UI applied ==="
+
+echo "=== Setting wallpaper on first XFCE login (autostart) ==="
+
+# Script appliqué au login (quand XFCE tourne vraiment)
+cat > /usr/local/bin/planamo-set-wallpaper <<'EOF'
+#!/bin/bash
+set -e
+
+USER_NAME="analyste"
+WALL="/home/${USER_NAME}/Pictures/patch_sim.png"
+[ -f "$WALL" ] || WALL="/usr/share/planamo/patch_sim.png"
+[ -f "$WALL" ] || exit 0
+
+# Attendre que xfconf soit prêt
+for i in {1..20}; do
+  if command -v xfconf-query >/dev/null 2>&1 && xfconf-query -c xfce4-desktop -l >/dev/null 2>&1; then
+    break
+  fi
+  sleep 0.5
+done
+
+# Appliquer sur toutes les propriétés last-image
+xfconf-query -c xfce4-desktop -l | grep -E 'last-image$' | while read -r prop; do
+  xfconf-query -c xfce4-desktop -p "$prop" -s "$WALL" || true
+done
+
+# Style "stretched" = 2 (étiré)
+xfconf-query -c xfce4-desktop -l | grep -E 'image-style$' | while read -r prop; do
+  xfconf-query -c xfce4-desktop -p "$prop" -s 2 || true
+done
+
+exit 0
+EOF
+chmod +x /usr/local/bin/planamo-set-wallpaper
+
+# Autostart XFCE (global)
+mkdir -p /etc/xdg/autostart
+cat > /etc/xdg/autostart/planamo-wallpaper.desktop <<'EOF'
+[Desktop Entry]
+Type=Application
+Name=PLANAMO Wallpaper
+Exec=/usr/local/bin/planamo-set-wallpaper
+Terminal=false
+OnlyShowIn=XFCE;
+X-GNOME-Autostart-enabled=true
+EOF
