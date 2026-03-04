@@ -101,7 +101,6 @@ From this single source:
 PLANAMO includes offline forensic containers:
 
 * MobSF
-* REMnux
 
 ### Live Mode
 
@@ -119,7 +118,6 @@ Available wrappers:
 
 ```bash
 mobsf
-remnux
 planamo-docker-load
 ```
 
@@ -224,7 +222,7 @@ planamo.iso
 * Tool validation automation
 * Versioned ISO releases
 * GitLab CI build pipeline
-
+* Integration docker images >4Go
 ---
 
 ## 🏷 Internal Project
