@@ -1,23 +1,43 @@
 #!/bin/bash
 set -e
 
-# 1. Docker images FULL offline
-bash scripts/docker/01_fetch_images.sh
+LOGDIR="$(pwd)/logs"
+mkdir -p "$LOGDIR"
+BUILD_LOG="$LOGDIR/build_$(date +%Y%m%d_%H%M%S).log"
 
-# 2. Base system
-bash scripts/01_debootstrap.sh
-bash scripts/02_chroot_setup.sh
+# Redirige stdout + stderr vers le log ET le terminal
+exec > >(tee -a "$BUILD_LOG") 2>&1
 
-# 3. Inject docker images into ISO tree/rootfs
-bash scripts/docker/02_prepare_for_iso.sh
+echo "======================================="
+echo "   PLANAMO BUILD START"
+echo "   $(date '+%Y-%m-%d %H:%M:%S')"
+echo "   Log : $BUILD_LOG"
+echo "======================================="
 
-# 4. Split docker tars > 4GB (needed for ISO9660 limits)
-bash scripts/03_split_docker_images.sh
+run_step() {
+  local label="$1"
+  local cmd="$2"
+  local start
 
-# 5. Make squashfs
-bash scripts/04_make_squashfs.sh
+  echo ""
+  echo "--- [$label] START $(date '+%H:%M:%S') ---"
+  start=$(date +%s)
 
-# 6. Build ISO
-bash scripts/05_make_iso.sh
+  bash $cmd
 
-echo "=== PLANAMO FULL ISO BUILT ==="
+  local duration=$(( $(date +%s) - start ))
+  echo "--- [$label] DONE in ${duration}s ---"
+}
+
+run_step "01 fetch docker images"    "scripts/docker/01_fetch_images.sh"
+run_step "02 debootstrap"            "scripts/01_debootstrap.sh"
+run_step "03 chroot setup"           "scripts/02_chroot_setup.sh"
+run_step "04 prepare docker for iso" "scripts/docker/02_prepare_for_iso.sh"
+run_step "05 make squashfs"          "scripts/03_make_squashfs.sh"
+run_step "06 build iso"              "scripts/04_make_iso.sh"
+
+echo ""
+echo "======================================="
+echo "   PLANAMO FULL ISO BUILT"
+echo "   $(date '+%Y-%m-%d %H:%M:%S')"
+echo "======================================="

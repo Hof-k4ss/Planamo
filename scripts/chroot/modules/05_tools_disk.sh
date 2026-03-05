@@ -4,8 +4,6 @@ export DEBIAN_FRONTEND=noninteractive
 
 echo "=== Installing Disk / Filesystem Tools (forensics) ==="
 
-apt update
-
 apt install -y \
   gparted \
   gddrescue \

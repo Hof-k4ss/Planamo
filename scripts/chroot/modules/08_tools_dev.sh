@@ -3,8 +3,6 @@ set -e
 
 echo "=== Installing Dev Tools (Docker, VSCode, Terminator) ==="
 
-apt update
-
 # ------------------------
 # Base utilities
 # ------------------------

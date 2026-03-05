@@ -4,7 +4,6 @@ set -e
 echo "=== Installing Calamares installer ==="
 
 export DEBIAN_FRONTEND=noninteractive
-apt update
 
 # Calamares + dépendances nécessaires
 apt install -y \

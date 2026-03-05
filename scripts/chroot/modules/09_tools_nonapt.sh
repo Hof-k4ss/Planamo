@@ -4,7 +4,6 @@ set -ex
 echo "=== Installing Non-APT Tools ==="
 
 export DEBIAN_FRONTEND=noninteractive
-apt update || true
 
 apt install -y \
     wget \
@@ -56,6 +55,8 @@ fi
 # RIZIN (build from source)
 # -----------------------
 
+echo "=== Building Rizin from source ==="
+
 apt install -y \
   build-essential \
   meson \
@@ -101,6 +102,8 @@ else
   echo "ERROR: Rizin binary not found after install."
   exit 1
 fi
+
+echo "=== Rizin $(rizin -v 2>/dev/null | head -1) installed ==="
 
 # -----------------------
 # FRIDA

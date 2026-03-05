@@ -27,12 +27,10 @@ apt install -y \
 
 echo "=== Installing Firefox (Mozilla tarball) ==="
 
-# Firefox téléchargé par Mozilla = tar.xz -> besoin de xz-utils
 apt install -y tar xz-utils libgtk-3-0t64 libdbus-glib-1-2 libasound2t64 || true
 
 cd /tmp
 
-# Téléchargement officiel Mozilla (64-bit Linux)
 wget -O firefox.tar.xz "https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=fr"
 
 if [ ! -s firefox.tar.xz ]; then
@@ -40,15 +38,12 @@ if [ ! -s firefox.tar.xz ]; then
   exit 1
 fi
 
-# Installation propre dans /opt
 rm -rf /opt/firefox
 tar -xJf firefox.tar.xz -C /opt/
 rm -f firefox.tar.xz
 
-# Lien global
 ln -sf /opt/firefox/firefox /usr/local/bin/firefox
 
-# Desktop entry
 cat > /usr/share/applications/firefox.desktop <<'EOF'
 [Desktop Entry]
 Name=Firefox
@@ -63,22 +58,35 @@ EOF
 echo "=== Firefox installed successfully ==="
 
 # =============================
-# Tor Browser (official tar - pinned)
+# Tor Browser (latest via API)
 # =============================
 
-echo "=== Installing Tor Browser (official tarball) ==="
+echo "=== Installing Tor Browser (latest) ==="
 
-apt install -y wget tar xz-utils ca-certificates || true
+apt install -y wget tar xz-utils ca-certificates jq || true
 
+TB_FALLBACK_VERSION="15.0.7"
+
+echo "[*] Fetching latest Tor Browser version from API..."
+TB_VERSION=$(curl -sf --max-time 15 \
+  "https://aus1.torproject.org/torbrowser/update_3/release/downloads.json" \
+  | jq -r '.version' 2>/dev/null || true)
+
+if [ -z "$TB_VERSION" ]; then
+  echo "[!] API unreachable, falling back to version $TB_FALLBACK_VERSION"
+  TB_VERSION="$TB_FALLBACK_VERSION"
+else
+  echo "[*] Latest Tor Browser version: $TB_VERSION"
+fi
+
+TB_URL="https://www.torproject.org/dist/torbrowser/${TB_VERSION}/tor-browser-linux-x86_64-${TB_VERSION}.tar.xz"
+
+echo "[*] Downloading: $TB_URL"
 cd /tmp
-
-TB_URL="https://www.torproject.org/dist/torbrowser/15.0.7/tor-browser-linux-x86_64-15.0.7.tar.xz"
-
-echo "[*] Tor Browser URL: $TB_URL"
 wget -O torbrowser.tar.xz "$TB_URL"
 
 if [ ! -s torbrowser.tar.xz ]; then
-  echo "ERROR: Tor Browser download failed"
+  echo "ERROR: Tor Browser download failed (version $TB_VERSION)"
   exit 1
 fi
 
@@ -100,6 +108,6 @@ Categories=Network;
 OnlyShowIn=XFCE;
 EOF
 
-echo "=== Tor Browser installed successfully ==="
+echo "=== Tor Browser $TB_VERSION installed successfully ==="
 
 apt clean

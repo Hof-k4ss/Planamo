@@ -25,8 +25,17 @@ echo $(sudo du -sx --block-size=1 "$ROOTFS" | cut -f1) > "$ISODIR/casper/filesys
 mkdir -p "$ISODIR/.disk"
 echo "Planamo Live" > "$ISODIR/.disk/info"
 
-cp "$ROOTFS"/boot/vmlinuz-* "$ISODIR/casper/vmlinuz"
-cp "$ROOTFS"/boot/initrd.img-* "$ISODIR/casper/initrd"
+VMLINUZ=$(ls "$ROOTFS"/boot/vmlinuz-* 2>/dev/null | sort -V | tail -1)
+INITRD=$(ls "$ROOTFS"/boot/initrd.img-* 2>/dev/null | sort -V | tail -1)
+
+[ -z "$VMLINUZ" ] && { echo "ERROR: no vmlinuz found in $ROOTFS/boot/"; exit 1; }
+[ -z "$INITRD"  ] && { echo "ERROR: no initrd.img found in $ROOTFS/boot/"; exit 1; }
+
+echo "Kernel  : $(basename "$VMLINUZ")"
+echo "Initrd  : $(basename "$INITRD")"
+
+cp "$VMLINUZ" "$ISODIR/casper/vmlinuz"
+cp "$INITRD"  "$ISODIR/casper/initrd"
 
 
 echo "SquashFS créé."

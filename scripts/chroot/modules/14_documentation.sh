@@ -11,7 +11,6 @@ echo "=== Generating PLANAMO docs from tools_map.conf ==="
 
 # Dépendances + mkdocs (venv)
 export DEBIAN_FRONTEND=noninteractive
-apt update || true
 apt install -y python3-venv python3-pip
 
 mkdir -p /opt/planamo/venvs

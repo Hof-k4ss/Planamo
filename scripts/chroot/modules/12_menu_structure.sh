@@ -14,28 +14,20 @@ slugify() {
 # thème -> catégorie XDG custom
 theme_to_cat() {
   case "$1" in
-    "Mobile Acquisition") echo "X-PLANAMO-MOBILE-ACQ" ;;
-    "Mobile Analysis") echo "X-PLANAMO-MOBILE-ANALYSIS" ;;
+    "Mobile Acquisition")            echo "X-PLANAMO-MOBILE-ACQ" ;;
+    "Mobile Analysis")               echo "X-PLANAMO-MOBILE-ANALYSIS" ;;
     "Malware & Reverse Engineering") echo "X-PLANAMO-MALWARE" ;;
-    "Disk & Filesystem") echo "X-PLANAMO-DISK" ;;
-    "Memory & Volatile Analysis") echo "X-PLANAMO-MEMORY" ;;
-    "Network & Traffic") echo "X-PLANAMO-NETWORK" ;;
-    "OSINT & Investigation") echo "X-PLANAMO-OSINT" ;;
-    "Development & Scripting") echo "X-PLANAMO-DEV" ;;
-    "Docker & Services") echo "X-PLANAMO-DOCKER" ;;
-    *) echo "X-PLANAMO" ;;
+    "Disk & Filesystem")             echo "X-PLANAMO-DISK" ;;
+    "Memory & Volatile Analysis")    echo "X-PLANAMO-MEMORY" ;;
+    "Network & Traffic")             echo "X-PLANAMO-NETWORK" ;;
+    "OSINT & Investigation")         echo "X-PLANAMO-OSINT" ;;
+    "Development & Scripting")       echo "X-PLANAMO-DEV" ;;
+    "Docker & Services")             echo "X-PLANAMO-DOCKER" ;;
+    *)                               echo "X-PLANAMO" ;;
   esac
 }
 
-# GUI vs terminal
-is_gui_cmd() {
-  case "$1" in
-    firefox|sqlitebrowser|gparted|jadx-gui|code|terminator|tor-browser) return 0;;
-    *) return 1;;
-  esac
-}
-
-while IFS='|' read -r name cmd themes; do
+while IFS='|' read -r name cmd themes type; do
   [[ -z "$name" || "$name" =~ ^# ]] && continue
 
   # cmd = premier token
@@ -54,7 +46,10 @@ while IFS='|' read -r name cmd themes; do
     cats="${cats}${c};"
   done
 
-  if is_gui_cmd "$bin"; then
+  # type lu depuis le 4ème champ (gui ou terminal)
+  type="$(echo "$type" | xargs)"
+
+  if [ "$type" = "gui" ]; then
     cat > "$APP_DIR/$file" <<EOF
 [Desktop Entry]
 Name=$name

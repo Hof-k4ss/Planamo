@@ -4,8 +4,6 @@ export DEBIAN_FRONTEND=noninteractive
 
 echo "=== Installing Network / Transfer Tools ==="
 
-apt update
-
 apt install -y \
   openssh-client \
   openssh-server \
