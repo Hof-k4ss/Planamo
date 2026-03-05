@@ -19,6 +19,7 @@ python3 -m venv /opt/planamo/venvs/mkdocs
 /opt/planamo/venvs/mkdocs/bin/pip install --upgrade pip
 /opt/planamo/venvs/mkdocs/bin/pip install mkdocs mkdocs-material
 
+# Wrapper mkdocs global
 cat <<'EOF' > /usr/local/bin/mkdocs
 #!/bin/bash
 exec /opt/planamo/venvs/mkdocs/bin/mkdocs "$@"
@@ -124,31 +125,34 @@ mkdocs build -d "$SITE"
 
 echo "=== HTML documentation built: $SITE/index.html ==="
 
-# Icône sur le bureau + dans /etc/skel
-DESKTOP_ENTRY_CONTENT=$(cat <<'EOF'
+# --------------------------------------------------------------------
+# Desktop icon (SKEL ONLY) + fix "Untrusted" on first XFCE login
+# --------------------------------------------------------------------
+echo "=== Desktop icon: PLANAMO Documentation (skel only) ==="
+
+mkdir -p /etc/skel/Desktop
+
+cat > /etc/skel/Desktop/PLANAMO-Documentation.desktop <<'EOF'
 [Desktop Entry]
 Name=PLANAMO Documentation
-Exec=xdg-open file:///opt/planamo/docs/site/index.html
+Exec=xdg-open /opt/planamo/docs/site/index.html
 Icon=help-browser
 Terminal=false
 Type=Application
-Categories=Utility;
 EOF
-)
 
-# Pour futurs users
-mkdir -p /etc/skel/Desktop
-echo "$DESKTOP_ENTRY_CONTENT" > /etc/skel/Desktop/planamo-documentation.desktop
-chmod +x /etc/skel/Desktop/planamo-documentation.desktop
+chmod +x /etc/skel/Desktop/PLANAMO-Documentation.desktop
 
-# Pour l'utilisateur live (si home existe déjà dans le chroot)
-for home in /home/*; do
-  if [ -d "$home" ]; then
-    mkdir -p "$home/Desktop"
-    echo "$DESKTOP_ENTRY_CONTENT" > "$home/Desktop/planamo-documentation.desktop"
-    chmod +x "$home/Desktop/planamo-documentation.desktop"
-    chown -R "$(basename "$home")":"$(basename "$home")" "$home/Desktop" 2>/dev/null || true
-  fi
-done
+# Mark desktop files as trusted on first XFCE login (avoids popup)
+mkdir -p /etc/xdg/autostart
+cat > /etc/xdg/autostart/planamo-trust-desktop-files.desktop <<'EOF'
+[Desktop Entry]
+Type=Application
+Name=PLANAMO Trust Desktop Files
+Exec=sh -lc 'for f in "$HOME/Desktop/"*.desktop; do [ -f "$f" ] && gio set "$f" metadata::trusted true || true; done'
+OnlyShowIn=XFCE;
+X-GNOME-Autostart-enabled=true
+NoDisplay=true
+EOF
 
 apt clean

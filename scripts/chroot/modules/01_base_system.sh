@@ -21,11 +21,9 @@ apt install -y \
     casper \
     linux-image-generic \
     linux-headers-generic \
-    xubuntu-desktop \
     dbus-x11 \
     policykit-1 \
     network-manager \
-    net-tools \
     network-manager-gnome \
     iproute2 \
     ethtool \
@@ -33,8 +31,19 @@ apt install -y \
     wpasupplicant \
     linux-firmware \
     ca-certificates \
-    firefox \
-    htop
+    htop \
+    xfce4 \
+    xfce4-goodies \
+    xfce4-terminal \
+    thunar \
+    thunar-archive-plugin \
+    thunar-volman \
+    gvfs \
+    gvfs-backends \
+    lightdm \
+    lightdm-gtk-greeter
+
+systemctl enable lightdm
 
 # -----------------------
 # Hostname

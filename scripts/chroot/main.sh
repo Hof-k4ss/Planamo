@@ -2,29 +2,33 @@
 set -e
 
 echo "======================================="
-echo "      PLANAMO CHROOT INSTALL START     "
+echo "       PLANAMO CHROOT INSTALL           "
 echo "======================================="
 
-bash /root/modules/01_base_system.sh
-bash /root/modules/02_user.sh
+cd /root/modules
 
-bash /root/modules/03_tools_mobile.sh
-bash /root/modules/04_tools_network.sh
-bash /root/modules/05_tools_disk.sh
-bash /root/modules/06_tools_malware.sh
-bash /root/modules/07_tools_osint.sh
-
-bash /root/modules/08_dev_tools.sh
-bash /root/modules/09_tools_nonapt.sh
-bash /root/modules/10_tools_custom.sh
-
-bash /root/modules/11_docker_load.sh
-
-bash /root/modules/12_menu_structure.sh
-bash /root/modules/13_documentation.sh
-
-bash /root/modules/14_finalize.sh
+for f in \
+  01_base_system.sh \
+  02_user.sh \
+  03_tools_mobile.sh \
+  04_tools_network.sh \
+  05_tools_disk.sh \
+  06_tools_malware.sh \
+  07_tools_osint.sh \
+  08_tools_dev.sh \
+  09_tools_nonapt.sh \
+  10_tools_custom.sh \
+  11_docker_load.sh \
+  12_menu_structure.sh \
+  13_menu_planamo.sh \
+  14_documentation.sh \
+  15_installer.sh \
+  16_finalize.sh
+do
+  echo "=== Running $f ==="
+  bash "$f"
+done
 
 echo "======================================="
-echo "       PLANAMO CHROOT INSTALL DONE     "
+echo "       PLANAMO CHROOT INSTALL DONE      "
 echo "======================================="
