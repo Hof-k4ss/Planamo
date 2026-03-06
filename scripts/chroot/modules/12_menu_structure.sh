@@ -11,7 +11,6 @@ slugify() {
   echo "$1" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g'
 }
 
-# thème -> catégorie XDG custom
 theme_to_cat() {
   case "$1" in
     "Mobile Acquisition")            echo "X-PLANAMO-MOBILE-ACQ" ;;
@@ -30,14 +29,11 @@ theme_to_cat() {
 while IFS='|' read -r name cmd themes type; do
   [[ -z "$name" || "$name" =~ ^# ]] && continue
 
-  # cmd = premier token
   bin="${cmd%% *}"
-
   command -v "$bin" >/dev/null 2>&1 || continue
 
   file="planamo-$(slugify "$name").desktop"
 
-  # plusieurs thèmes possibles -> plusieurs Categories
   cats=""
   IFS=',' read -ra tarr <<< "$themes"
   for raw in "${tarr[@]}"; do
@@ -46,11 +42,10 @@ while IFS='|' read -r name cmd themes type; do
     cats="${cats}${c};"
   done
 
-  # type lu depuis le 4ème champ (gui ou terminal)
   type="$(echo "$type" | xargs)"
 
   if [ "$type" = "gui" ]; then
-    cat > "$APP_DIR/$file" <<EOF
+    cat > "$APP_DIR/$file" << EOF
 [Desktop Entry]
 Name=$name
 Exec=$cmd
@@ -58,10 +53,9 @@ Icon=applications-system
 Terminal=false
 Type=Application
 Categories=$cats
-OnlyShowIn=XFCE;
 EOF
   else
-    cat > "$APP_DIR/$file" <<EOF
+    cat > "$APP_DIR/$file" << EOF
 [Desktop Entry]
 Name=$name
 Exec=xfce4-terminal -e "bash -lc '$cmd; exec bash'"
@@ -69,7 +63,6 @@ Icon=utilities-terminal
 Terminal=false
 Type=Application
 Categories=$cats
-OnlyShowIn=XFCE;
 EOF
   fi
 

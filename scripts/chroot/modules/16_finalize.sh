@@ -82,7 +82,7 @@ chown -R "$USER_NAME:$USER_NAME" "$PIC_DIR"
 # Wallpaper XFCE
 # Écrit le XML de config directement dans le profil utilisateur.
 # Couvre tous les noms de moniteurs courants (VM + bare metal).
-# image-style 4 = étiré (Stretched)
+# image-style 5 = Stretched (étiré)
 # -----------------------
 echo "=== XFCE wallpaper ==="
 
@@ -98,35 +98,35 @@ cat << EOF > "$XFCONF_DIR/xfce4-desktop.xml"
       <property name="monitorVirtual-1" type="empty">
         <property name="workspace0" type="empty">
           <property name="last-image" type="string" value="$WALL"/>
-          <property name="image-style" type="int" value="4"/>
+          <property name="image-style" type="int" value="5"/>
           <property name="color-style" type="int" value="0"/>
         </property>
       </property>
       <property name="monitorVirtual1" type="empty">
         <property name="workspace0" type="empty">
           <property name="last-image" type="string" value="$WALL"/>
-          <property name="image-style" type="int" value="4"/>
+          <property name="image-style" type="int" value="5"/>
           <property name="color-style" type="int" value="0"/>
         </property>
       </property>
       <property name="monitor0" type="empty">
         <property name="workspace0" type="empty">
           <property name="last-image" type="string" value="$WALL"/>
-          <property name="image-style" type="int" value="4"/>
+          <property name="image-style" type="int" value="5"/>
           <property name="color-style" type="int" value="0"/>
         </property>
       </property>
       <property name="monitorHDMI-1" type="empty">
         <property name="workspace0" type="empty">
           <property name="last-image" type="string" value="$WALL"/>
-          <property name="image-style" type="int" value="4"/>
+          <property name="image-style" type="int" value="5"/>
           <property name="color-style" type="int" value="0"/>
         </property>
       </property>
       <property name="monitorDP-1" type="empty">
         <property name="workspace0" type="empty">
           <property name="last-image" type="string" value="$WALL"/>
-          <property name="image-style" type="int" value="4"/>
+          <property name="image-style" type="int" value="5"/>
           <property name="color-style" type="int" value="0"/>
         </property>
       </property>
@@ -148,7 +148,7 @@ mkdir -p "$HOME_DIR/Desktop"
 cat << 'EOF' > /etc/skel/Desktop/PLANAMO-Documentation.desktop
 [Desktop Entry]
 Name=PLANAMO Documentation
-Exec=/usr/local/bin/planamo-doc
+Exec=/usr/local/bin/rtfm
 Icon=help-browser
 Terminal=false
 Type=Application
