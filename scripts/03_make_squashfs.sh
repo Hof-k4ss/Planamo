@@ -14,7 +14,7 @@ cp -r config/grub-theme/* "$ISODIR/boot/grub/themes/planamo/"
 cp config/grub.cfg "$ISODIR/boot/grub/grub.cfg"
 
 rm -f "$ISODIR/casper/filesystem.squashfs"
-mksquashfs "$ROOTFS" "$ISODIR/casper/filesystem.squashfs" -noappend -comp xz -b 1048576 -Xbcj x86 -e boot
+mksquashfs "$ROOTFS" "$ISODIR/casper/filesystem.squashfs" -noappend -comp zstd -b 1048576 -Xcompression-level 19 -e boot
 
 echo "Création du manifest..."
 sudo chroot "$ROOTFS" dpkg-query -W --showformat='${Package} ${Version}\n' > "$ISODIR/casper/filesystem.manifest"

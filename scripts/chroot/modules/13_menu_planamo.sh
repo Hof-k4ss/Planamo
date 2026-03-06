@@ -24,12 +24,12 @@ cat > /etc/xdg/menus/xfce-applications.menu <<'EOF'
       <Include><Category>X-PLANAMO-MOBILE-ANALYSIS</Category></Include>
     </Menu>
 
-    <Menu><Name>Malware & Reverse Engineering</Name>
+    <Menu><Name>Malware &amp; Reverse Engineering</Name>
       <Directory>planamo-malware.directory</Directory>
       <Include><Category>X-PLANAMO-MALWARE</Category></Include>
     </Menu>
 
-    <Menu><Name>Disk & Filesystem</Name>
+    <Menu><Name>Disk &amp; Filesystem</Name>
       <Directory>planamo-disk.directory</Directory>
       <Include><Category>X-PLANAMO-DISK</Category></Include>
     </Menu>
@@ -54,7 +54,7 @@ cat > /etc/xdg/menus/xfce-applications.menu <<'EOF'
       <Include><Category>X-PLANAMO-DEV</Category></Include>
     </Menu>
 
-    <Menu><Name>Docker & Services</Name>
+    <Menu><Name>Docker &amp; Services</Name>
       <Directory>planamo-docker.directory</Directory>
       <Include><Category>X-PLANAMO-DOCKER</Category></Include>
     </Menu>
