@@ -95,7 +95,7 @@ set -e
 docker rm -f mobsf 2>/dev/null || true
 docker run -d -p 8000:8000 --name mobsf opensecurity/mobile-security-framework-mobsf:latest
 
-sleep 5
+sleep 30
 firefox http://127.0.0.1:8000 >/dev/null 2>&1 || true
 echo "[+] MobSF running: http://127.0.0.1:8000"
 EOF
@@ -181,7 +181,7 @@ run_mobsf() {
   sudo docker -H "$SOCK" rm -f mobsf 2>/dev/null || true
   sudo docker -H "$SOCK" run -d -p 8000:8000 --name mobsf opensecurity/mobile-security-framework-mobsf:latest
 
-  sleep 5
+  sleep 30
 
   # ouvre navigateur si dispo
   if command -v firefox >/dev/null 2>&1; then

@@ -23,6 +23,7 @@ apt install -y \
   unrar \
   xz-utils \
   zip \
-  unzip
+  unzip \
+  forensics-all 
 
 apt clean

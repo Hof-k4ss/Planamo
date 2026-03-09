@@ -1,5 +1,4 @@
 # 🛡 PLANAMO (Plateforme d'Analyse Mobile)
-
 ### Mobile Forensics & Incident Response Live Distribution
 
 ![Ubuntu](https://img.shields.io/badge/Base-Ubuntu%2024.04%20\(Noble\)-E95420?logo=ubuntu)
@@ -38,31 +37,33 @@ PLANAMO is modular and deterministic.
 ### Build Pipeline
 
 ```bash
-01_fetch_images.sh
-01_debootstrap.sh
-02_chroot_setup.sh
-modules/ (01 → 14)
-03_make_squashfs.sh
-04_make_iso.sh
+scripts/docker/01_fetch_images.sh     # Pull Docker forensic images
+01_debootstrap.sh                     # Bootstrap minimal Ubuntu Noble rootfs
+02_chroot_setup.sh                    # Mount pseudo-fs, inject modules, run main.sh
+scripts/chroot/main.sh                # Execute chroot modules 01 → 16
+03_make_squashfs.sh                   # Build SquashFS (zstd) + extract kernel/initrd
+04_make_iso.sh                        # Assemble bootable ISO via grub-mkrescue
 ```
 
 ### Chroot Module Order
 
 ```bash
-01_base_system.sh
-02_user.sh
-03_tools_mobile.sh
-04_tools_network.sh
-05_tools_disk.sh
-06_tools_malware.sh
-07_tools_osint.sh
-08_dev_tools.sh
-09_tools_nonapt.sh
-10_tools_custom.sh
-11_docker_load.sh
-12_menu_structure.sh
-13_documentation.sh
-14_finalize.sh
+01_base_system.sh       # APT base packages, locale, timezone
+02_user.sh              # analyste user, sudo, password
+03_tools_mobile.sh      # Mobile acquisition & analysis tools
+04_tools_network.sh     # Network forensics tools
+05_tools_disk.sh        # Disk & filesystem tools
+06_tools_malware.sh     # Malware & reverse engineering tools
+07_tools_osint.sh       # OSINT tools (incl. Tor Browser)
+08_tools_dev.sh         # Development tools
+09_tools_nonapt.sh      # Tools compiled from source (Rizin, etc.)
+10_tools_custom.sh      # Custom scripts & wrappers
+11_docker_load.sh       # Load offline Docker images
+12_menu_structure.sh    # Generate .desktop launchers from tools_map.conf
+13_menu_planamo.sh      # XFCE menu XML structure
+14_documentation.sh     # MkDocs documentation generation
+15_installer.sh         # bash+dialog installer (planamo-install)
+16_finalize.sh          # LightDM autologin, wallpaper, desktop icons, trusted launchers
 ```
 
 ---
@@ -75,154 +76,165 @@ All tools are defined centrally in:
 scripts/chroot/tools_map.conf
 ```
 
-From this single source:
+Format: `name|command|categories|type(gui/terminal)`
 
-* Desktop launchers are generated
-* MkDocs documentation is generated
-* Tool categories are structured
-* Documentation pages are built automatically
+From this single source of truth:
+
+* Desktop launchers are generated automatically
+* MkDocs documentation pages are built
+* XFCE menu categories are structured
+* Tool type (GUI vs terminal) is determined
 
 ### Categories
 
-* Mobile Acquisition
-* Mobile Analysis
-* Malware & Reverse Engineering
-* Disk & Filesystem
-* Memory & Volatile Analysis
-* Network & Traffic
-* OSINT & Investigation
-* Development & Scripting
-* Docker & Services
+| Category | XFCE Menu |
+|---|---|
+| Mobile Acquisition | X-PLANAMO-MOBILE-ACQ |
+| Mobile Analysis | X-PLANAMO-MOBILE-ANALYSIS |
+| Malware & Reverse Engineering | X-PLANAMO-MALWARE |
+| Disk & Filesystem | X-PLANAMO-DISK |
+| Memory & Volatile Analysis | X-PLANAMO-MEMORY |
+| Network & Traffic | X-PLANAMO-NETWORK |
+| OSINT & Investigation | X-PLANAMO-OSINT |
+| Development & Scripting | X-PLANAMO-DEV |
+| Docker & Services | X-PLANAMO-DOCKER |
 
 ---
 
 ## 🐳 Docker Integration
 
-PLANAMO includes offline forensic containers:
+PLANAMO includes offline forensic containers pre-loaded at build time.
 
-* MobSF
+**Available images:**
+* MobSF (Mobile Security Framework)
 
-### Live Mode
-
-* Overlay filesystem
+**Live Mode:**
+* Overlay filesystem (changes lost on reboot)
 * Temporary Docker instance
-* MobSF available
+* MobSF available via `mobsf` wrapper
 
-### Installed Mode
+**Installed Mode:**
+* Full persistent Docker environment
+* All forensic images loaded at boot
+* Persistent storage
 
-* Full Docker support
-* All forensic images loaded
-* Persistent environment
-
-Available wrappers:
-
+**Available wrappers:**
 ```bash
-mobsf
-planamo-docker-load
+mobsf                    # Launch MobSF container
+planamo-docker-load      # Reload all Docker images
 ```
+
+> Docker images >4GB are split at build time and reassembled on first run.
 
 ---
 
 ## 📚 Documentation System
 
-Documentation is automatically generated during build.
+Documentation is automatically generated during the build from `tools_map.conf`.
 
-Engine:
+* Engine: **MkDocs** with Material Theme
+* Output: `/opt/planamo/docs/site/index.html`
+* Launcher: Desktop shortcut **PLANAMO Documentation** → `rtfm` or `planamo-doc`
 
-* MkDocs
-* Material Theme
-
-Output location:
-
-```
-/opt/planamo/docs/site/index.html
+```bash
+rtfm          # Open documentation in Firefox
+planamo-doc   # Alias for rtfm
 ```
 
-A desktop shortcut **PLANAMO Documentation** is automatically created.
+---
+
+## 💾 Installer
+
+PLANAMO includes a custom bash+dialog installer (`planamo-install`) replacing Calamares.
+
+**Features:**
+* GPT partitioning (BIOS + UEFI support)
+* Auto-detect EFI or legacy mode
+* unsquashfs-based system copy
+* Kernel copied from live casper/
+* GRUB installed and configured
+* Desktop install icon auto-removes after installation
+
+**Launch:**
+```bash
+sudo planamo-install          # CLI
+# or double-click desktop icon (live only)
+```
 
 ---
 
 ## ⚙️ Build Requirements (Host)
 
-Build must be performed on Debian or Ubuntu.
-
-Install required packages:
+Build must be performed on **Debian or Ubuntu**.
 
 ```bash
 sudo apt install debootstrap squashfs-tools xorriso \
-grub-pc-bin grub-efi-amd64-bin mtools docker.io git
+  grub-pc-bin grub-efi-amd64-bin mtools docker.io git
 ```
 
 ---
 
 ## 🔨 Build ISO
 
-From project root:
-
 ```bash
 bash build.sh
 ```
 
-Build process:
+**Build steps:**
+1. Pull Docker forensic images
+2. Bootstrap minimal Ubuntu Noble rootfs
+3. Run 16 chroot modules (toolchain, menu, docs, installer, finalize)
+4. Generate SquashFS with zstd compression
+5. Assemble bootable ISO
 
-1. Download Docker images
-2. Bootstrap minimal Ubuntu
-3. Install forensic toolchain
-4. Generate documentation
-5. Create SquashFS
-6. Build bootable ISO
+**Output:** `planamo.iso`
 
-Output:
-
-```
-planamo.iso
-```
+**Logs:** `logs/build_YYYYMMDD_HHMMSS.log`
 
 ---
 
 ## 🧪 Live Environment
 
-* Xfce desktop
-* Forensic toolchain
-* Local HTML documentation
+* Xfce desktop with autologin (`analyste`)
+* Full forensic toolchain
+* Local HTML documentation (`rtfm`)
+* PLANAMO Applications menu
 * Controlled Docker execution
+* Install to disk via desktop icon
 * No Snap dependencies
 
----
-
-## 💾 Installed System
-
-* Persistent disk installation
-* Full Docker environment
-* Complete forensic stack
-* Modular maintainability
+**Credentials:** `analyste / P@ssw0rd`
 
 ---
 
 ## 🔐 Design Principles
 
 * No Snap dependency
-* Deterministic tool architecture
-* Modular build system
+* Deterministic modular build
+* Single source of truth (`tools_map.conf`)
 * Offline-ready Docker images
 * Auto-generated documentation
-* Strict separation between:
-
-  * APT tools
-  * Non-APT tools
-  * Custom tools
-  * Docker services
+* Strict separation:
+  * APT tools (`01`–`08`)
+  * Non-APT / compiled tools (`09`)
+  * Custom scripts (`10`)
+  * Docker services (`11`)
 
 ---
 
 ## 📈 Roadmap
 
-* Installer integration
-* Advanced menu categorization
-* Tool validation automation
-* Versioned ISO releases
-* GitLab CI build pipeline
-* Integration docker images >4Go
+* [x] Modular build system
+* [x] Custom bash+dialog installer
+* [x] XFCE menu with PLANAMO categories
+* [x] Auto-generated MkDocs documentation
+* [x] Docker offline image support (split >4GB)
+* [ ] Tool validation automation
+* [ ] Versioned ISO releases
+* [ ] GitLab CI build pipeline
+* [ ] iOS acquisition support
+* [ ] Network capture live dashboard
+
 ---
 
 ## 🏷 Internal Project

@@ -17,6 +17,13 @@ apt install -y \
     python3-pip \
     git \
     curl \
-    wget
+    wget \
+    libimobiledevice-utils \
+    usbmuxd \
+    libimobiledevice6 \
+    libplist-utils \
+    autopsy \
+    hexedit \
+    foremost  
 
 apt clean
