@@ -158,13 +158,16 @@ chmod +x /etc/skel/Desktop/PLANAMO-Documentation.desktop
 cat << 'EOF' > /etc/skel/Desktop/Install-PLANAMO.desktop
 [Desktop Entry]
 Name=Install PLANAMO
-Exec=/usr/local/bin/planamo-install-gui
+Exec=xfce4-terminal --title="PLANAMO Installer" --hide-menubar --disable-server -e "sudo /usr/local/bin/planamo-install"
 Icon=system-software-install
 Terminal=false
 Type=Application
+X-XFCE-Source=file:///etc/skel/Desktop/Install-PLANAMO.desktop
 EOF
 chmod +x /etc/skel/Desktop/Install-PLANAMO.desktop
 
+# L'icone Install ne va que sur le bureau live (casper/live)
+# Elle se supprime d'elle-meme a la fin de planamo-install
 cp -f /etc/skel/Desktop/PLANAMO-Documentation.desktop "$HOME_DIR/Desktop/"
 cp -f /etc/skel/Desktop/Install-PLANAMO.desktop "$HOME_DIR/Desktop/"
 chown -R "$USER_NAME:$USER_NAME" "$HOME_DIR/Desktop/"
@@ -200,23 +203,24 @@ mkdir -p /etc/xdg/autostart
 
 cat << 'EOF' > /usr/local/bin/planamo-trust-icons
 #!/bin/bash
-FLAG="$HOME/.config/planamo/.trusted-done"
-[ -f "$FLAG" ] && exit 0
-
-for i in $(seq 1 20); do
+# Attendre xfdesktop
+for i in $(seq 1 30); do
   pgrep xfdesktop >/dev/null 2>&1 && break
   sleep 0.5
 done
-sleep 1
+sleep 2
 
 for f in "$HOME/Desktop/"*.desktop; do
   [ -f "$f" ] || continue
   chmod +x "$f"
+  # Methode 1 : gio set metadata trusted
   gio set "$f" metadata::trusted true 2>/dev/null || true
+  # Methode 2 : xattr
+  python3 -c "import os; os.setxattr('$f', b'user.xdg.origin.url', b'')" 2>/dev/null || true
 done
 
-mkdir -p "$(dirname "$FLAG")"
-touch "$FLAG"
+# Forcer xfdesktop a relire les icones
+xfdesktop --reload 2>/dev/null || true
 EOF
 chmod +x /usr/local/bin/planamo-trust-icons
 

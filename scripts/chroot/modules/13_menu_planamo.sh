@@ -4,13 +4,18 @@ set -e
 echo "=== Installing PLANAMO XFCE menu structure ==="
 
 mkdir -p /etc/xdg/menus
+mkdir -p /usr/share/desktop-directories
 
-# Écriture du menu XML avec les balises Name correctes
-printf '%s\n' '<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
-"http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+cat > /etc/xdg/menus/xfce-applications.menu << 'XMLEOF'
+<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+  "http://www.freedesktop.org/standards/menu-spec/menu-1.0.dtd">
 <Menu>
   <Name>Xfce</Name>
+  <DefaultAppDirs/>
+  <DefaultDirectoryDirs/>
+  <DefaultMergeDirs/>
 
+  <!-- Menu PLANAMO custom -->
   <Menu>
     <Name>PLANAMO</Name>
     <Directory>planamo.directory</Directory>
@@ -28,13 +33,13 @@ printf '%s\n' '<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
     </Menu>
 
     <Menu>
-      <Name>Malware &amp; Reverse Engineering</Name>
+      <Name>Malware and Reverse Engineering</Name>
       <Directory>planamo-malware.directory</Directory>
       <Include><Category>X-PLANAMO-MALWARE</Category></Include>
     </Menu>
 
     <Menu>
-      <Name>Disk &amp; Filesystem</Name>
+      <Name>Disk and Filesystem</Name>
       <Directory>planamo-disk.directory</Directory>
       <Include><Category>X-PLANAMO-DISK</Category></Include>
     </Menu>
@@ -64,26 +69,95 @@ printf '%s\n' '<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
     </Menu>
 
     <Menu>
-      <Name>Docker &amp; Services</Name>
+      <Name>Docker and Services</Name>
       <Directory>planamo-docker.directory</Directory>
       <Include><Category>X-PLANAMO-DOCKER</Category></Include>
     </Menu>
 
   </Menu>
-</Menu>' > /etc/xdg/menus/xfce-applications.menu
 
-mkdir -p /usr/share/desktop-directories
+  <!-- Menus XFCE standard -->
+  <Menu>
+    <Name>Accessories</Name>
+    <Directory>xfce-accessories.directory</Directory>
+    <Include><Category>Utility</Category></Include>
+    <Exclude><Category>System</Category></Exclude>
+  </Menu>
 
-cat > /usr/share/desktop-directories/planamo.directory << 'DEOF'
+  <Menu>
+    <Name>Graphics</Name>
+    <Directory>xfce-graphics.directory</Directory>
+    <Include><Category>Graphics</Category></Include>
+  </Menu>
+
+  <Menu>
+    <Name>Internet</Name>
+    <Directory>xfce-internet.directory</Directory>
+    <Include>
+      <Category>Network</Category>
+      <Category>WebBrowser</Category>
+    </Include>
+  </Menu>
+
+  <Menu>
+    <Name>Office</Name>
+    <Directory>xfce-office.directory</Directory>
+    <Include><Category>Office</Category></Include>
+  </Menu>
+
+  <Menu>
+    <Name>Multimedia</Name>
+    <Directory>xfce-multimedia.directory</Directory>
+    <Include>
+      <Category>Audio</Category>
+      <Category>Video</Category>
+    </Include>
+  </Menu>
+
+  <Menu>
+    <Name>System</Name>
+    <Directory>xfce-system.directory</Directory>
+    <Include>
+      <Category>System</Category>
+      <Category>Settings</Category>
+    </Include>
+  </Menu>
+
+  <Menu>
+    <Name>Terminal Emulator</Name>
+    <Directory>xfce-system.directory</Directory>
+    <Include><Category>TerminalEmulator</Category></Include>
+  </Menu>
+
+</Menu>
+XMLEOF
+
+cat > /usr/share/desktop-directories/planamo.directory << 'EOF'
 [Desktop Entry]
 <Name>PLANAMO</Name>
 Icon=folder
 Type=Directory
-DEOF
+EOF
 
 for x in mobile-acq mobile-analysis malware disk memory network osint dev docker; do
   printf '[Desktop Entry]\n<Name>PLANAMO - %s</Name>\nIcon=folder\nType=Directory\n' "$x" \
     > "/usr/share/desktop-directories/planamo-$x.directory"
 done
+
+# Configurer xfce4-panel pour utiliser notre menu custom
+mkdir -p /etc/xdg/xfce4/xfconf/xfce-perchannel-xml
+cat > /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfce4-panel" version="1.0">
+  <property name="plugins" type="empty">
+    <property name="plugin-1" type="string" value="applicationsmenu">
+      <property name="menu-file" type="string" value="/etc/xdg/menus/xfce-applications.menu"/>
+      <property name="custom-menu" type="bool" value="true"/>
+      <property name="show-button-title" type="bool" value="true"/>
+      <property name="button-title" type="string" value="Applications"/>
+    </property>
+  </property>
+</channel>
+EOF
 
 echo "=== PLANAMO menu installed ==="

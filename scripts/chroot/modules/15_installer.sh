@@ -226,8 +226,13 @@ echo "======================================="
 echo "  INSTALLATION TERMINÉE AVEC SUCCÈS !"
 echo "======================================="
 
+# Supprimer l'icone Install du bureau live
+rm -f /home/analyste/Desktop/Install-PLANAMO.desktop 2>/dev/null || true
+sudo -u analyste DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u analyste)/bus" \
+  xfdesktop --reload 2>/dev/null || true
+
 dialog --title "$TITLE" \
-  --yesno "Installation terminée !\n\nRedémarrer maintenant ?\n(Retirez l'ISO avant de redémarrer)" \
+  --yesno "Installation terminee !\n\nRedemarrer maintenant ?\n(Retirez l'ISO avant de redemarrer)" \
   9 55 && reboot || true
 EOF
 
