@@ -171,12 +171,31 @@ chown -R "$USER_NAME:$USER_NAME" "$HOME_DIR/Desktop/"
 chmod +x "$HOME_DIR/Desktop/"*.desktop
 
 # -----------------------
-# Trusted launcher : autostart one-shot
-# gio set ne fonctionne pas sans session active.
-# On utilise un autostart qui tourne au premier login et pose le flag trusted.
+# Trusted launcher
+# Double méthode : xattr direct dans le chroot + autostart one-shot
 # -----------------------
-echo "=== Trusted launcher autostart ==="
+echo "=== Trusted launcher ==="
 
+# 1) xattr direct (fonctionne si le filesystem supporte les xattrs)
+python3 -c "
+import os
+files = [
+    '/home/analyste/Desktop/PLANAMO-Documentation.desktop',
+    '/home/analyste/Desktop/Install-PLANAMO.desktop',
+]
+for f in files:
+    if not os.path.exists(f):
+        print('[!] Absent:', f)
+        continue
+    try:
+        os.setxattr(f, b'user.xdg.origin.url', b'')
+        print('[OK] xattr:', f)
+    except Exception as ex:
+        print('[!] xattr failed:', ex)
+    os.chmod(f, 0o755)
+" 2>/dev/null || true
+
+# 2) Autostart one-shot : gio set au premier login
 mkdir -p /etc/xdg/autostart
 
 cat << 'EOF' > /usr/local/bin/planamo-trust-icons
@@ -184,11 +203,15 @@ cat << 'EOF' > /usr/local/bin/planamo-trust-icons
 FLAG="$HOME/.config/planamo/.trusted-done"
 [ -f "$FLAG" ] && exit 0
 
-# Attendre que la session XFCE soit prête
-sleep 2
+for i in $(seq 1 20); do
+  pgrep xfdesktop >/dev/null 2>&1 && break
+  sleep 0.5
+done
+sleep 1
 
 for f in "$HOME/Desktop/"*.desktop; do
   [ -f "$f" ] || continue
+  chmod +x "$f"
   gio set "$f" metadata::trusted true 2>/dev/null || true
 done
 
@@ -207,7 +230,6 @@ OnlyShowIn=XFCE;
 X-GNOME-Autostart-enabled=true
 NoDisplay=true
 EOF
-
 # -----------------------
 # Avatar utilisateur
 # -----------------------

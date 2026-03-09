@@ -149,28 +149,68 @@ echo "planamo" > "$MOUNT/etc/hostname"
 rm -f "$MOUNT/etc/casper.conf" 2>/dev/null || true
 rm -rf "$MOUNT/etc/initramfs-tools/conf.d/casper" 2>/dev/null || true
 
+# Copier le kernel et initrd depuis casper/ vers /boot du système installé
+# (le squashfs exclut /boot, il faut le reconstruire manuellement)
+echo "[*] Copie du kernel depuis /cdrom/casper/ vers /boot..."
+mkdir -p "$MOUNT/boot"
+
+VMLINUZ=$(ls /cdrom/casper/vmlinuz* 2>/dev/null | sort -V | tail -1)
+INITRD=$(ls /cdrom/casper/initrd* 2>/dev/null | sort -V | tail -1)
+
+[ -z "$VMLINUZ" ] && error_exit "vmlinuz introuvable dans /cdrom/casper/"
+[ -z "$INITRD"  ] && error_exit "initrd introuvable dans /cdrom/casper/"
+
+# Trouver le nom de version du kernel dans le rootfs installé
+KVER=$(ls "$MOUNT/lib/modules/" 2>/dev/null | sort -V | tail -1)
+[ -z "$KVER" ] && error_exit "Aucun module kernel trouvé dans le système installé"
+echo "[*] Version kernel détectée : $KVER"
+
+cp "$VMLINUZ" "$MOUNT/boot/vmlinuz-$KVER"
+cp "$INITRD"  "$MOUNT/boot/initrd.img-$KVER"
+
+# Créer les liens symboliques standard
+ln -sf "vmlinuz-$KVER"   "$MOUNT/boot/vmlinuz"
+ln -sf "initrd.img-$KVER" "$MOUNT/boot/initrd.img"
+
+echo "[OK] Kernel copié : vmlinuz-$KVER"
+echo "[OK] Initrd copié : initrd.img-$KVER" 
+
 # --- GRUB ---
 echo "[6/6] Installation GRUB..."
 
-mount --bind /dev     "$MOUNT/dev"     || error_exit "bind /dev échoué"
+mount --bind /dev     "$MOUNT/dev"     || error_exit "bind /dev echoue"
 mount --bind /dev/pts "$MOUNT/dev/pts" || true
-mount --bind /proc    "$MOUNT/proc"    || error_exit "bind /proc échoué"
-mount --bind /sys     "$MOUNT/sys"     || error_exit "bind /sys échoué"
+mount --bind /proc    "$MOUNT/proc"    || error_exit "bind /proc echoue"
+mount -t sysfs sysfs  "$MOUNT/sys"     || error_exit "mount /sys echoue"
+
+# Monter efivarfs si EFI (necessaire pour grub-install EFI)
+if $EFI_MODE; then
+  mount -t efivarfs efivarfs "$MOUNT/sys/firmware/efi/efivars" 2>/dev/null || true
+fi
+
+# Regenerer initramfs sans casper
+echo "[*] Regeneration initramfs..."
+chroot "$MOUNT" update-initramfs -u -k all || echo "[!] update-initramfs warning (non fatal)"
 
 if $EFI_MODE; then
   chroot "$MOUNT" grub-install \
     --target=x86_64-efi \
     --efi-directory=/boot/efi \
     --bootloader-id=PLANAMO \
-    --recheck || error_exit "grub-install EFI échoué"
+    --recheck || error_exit "grub-install EFI echoue"
 else
   chroot "$MOUNT" grub-install \
     --target=i386-pc \
     --recheck \
-    "$TARGET" || error_exit "grub-install BIOS échoué"
+    "$TARGET" || error_exit "grub-install BIOS echoue"
 fi
 
-chroot "$MOUNT" update-grub || error_exit "update-grub échoué"
+# Generer grub.cfg avec les bons UUIDs
+chroot "$MOUNT" update-grub || error_exit "update-grub echoue"
+
+# Verifier que grub.cfg a bien ete genere
+[ -f "$MOUNT/boot/grub/grub.cfg" ] || error_exit "grub.cfg absent apres update-grub"
+echo "[OK] grub.cfg genere : $(wc -l < "$MOUNT/boot/grub/grub.cfg") lignes"
 
 # --- Nettoyage ---
 echo "[*] Nettoyage des mounts..."
@@ -199,7 +239,8 @@ cat > /usr/local/bin/planamo-install-gui << 'EOF'
 exec xfce4-terminal \
   --title="PLANAMO Installer" \
   --hide-menubar \
-  -e "sudo /usr/local/bin/planamo-install"
+  --disable-server \
+  -e "bash -c 'sudo /usr/local/bin/planamo-install; read -p \'Appuyez sur Entree pour fermer...\' _'"
 EOF
 chmod +x /usr/local/bin/planamo-install-gui
 

@@ -4,8 +4,9 @@ set -e
 echo "=== Installing PLANAMO XFCE menu structure ==="
 
 mkdir -p /etc/xdg/menus
-cat > /etc/xdg/menus/xfce-applications.menu << 'EOF'
-<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+
+# Écriture du menu XML avec les balises Name correctes
+printf '%s\n' '<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
 "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
 <Menu>
   <Name>Xfce</Name>
@@ -69,25 +70,20 @@ cat > /etc/xdg/menus/xfce-applications.menu << 'EOF'
     </Menu>
 
   </Menu>
-</Menu>
-EOF
+</Menu>' > /etc/xdg/menus/xfce-applications.menu
 
 mkdir -p /usr/share/desktop-directories
 
-cat > /usr/share/desktop-directories/planamo.directory << 'EOF'
+cat > /usr/share/desktop-directories/planamo.directory << 'DEOF'
 [Desktop Entry]
-Name=PLANAMO
+<Name>PLANAMO</Name>
 Icon=folder
 Type=Directory
-EOF
+DEOF
 
 for x in mobile-acq mobile-analysis malware disk memory network osint dev docker; do
-  cat > "/usr/share/desktop-directories/planamo-$x.directory" << EOF
-[Desktop Entry]
-Name=PLANAMO - $x
-Icon=folder
-Type=Directory
-EOF
+  printf '[Desktop Entry]\n<Name>PLANAMO - %s</Name>\nIcon=folder\nType=Directory\n' "$x" \
+    > "/usr/share/desktop-directories/planamo-$x.directory"
 done
 
 echo "=== PLANAMO menu installed ==="
