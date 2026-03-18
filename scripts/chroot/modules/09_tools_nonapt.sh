@@ -24,7 +24,7 @@ mkdir -p /opt/planamo/wrappers
 mkdir -p /opt/planamo/tools/jadx
 cd /opt/planamo/tools/jadx
 
-JADX_VERSION="1.5.0"
+JADX_VERSION="1.5.5"
 JADX_URL="https://github.com/skylot/jadx/releases/download/v${JADX_VERSION}/jadx-${JADX_VERSION}.zip"
 
 echo "Downloading JADX ${JADX_VERSION}..."

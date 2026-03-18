@@ -8,6 +8,7 @@ echo "=== Installing Dev Tools (Docker, VSCode, Terminator) ==="
 # ------------------------
 apt install -y \
     terminator \
+    tmux \
     ca-certificates \
     curl \
     gnupg \
