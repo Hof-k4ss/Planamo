@@ -51,7 +51,7 @@ cat << EOF > "$HOME_DIR/.dmrc"
 [Desktop]
 Session=xfce
 EOF
-chown "$USER_NAME:$USER_NAME" "$HOME_DIR/.dmrc"
+chown "$USER_NAME:$USER_NAME" "$HOME_DIR/.dmrc" || true
 
 # Créer le fichier de session XFCE si absent
 if [ ! -f /usr/share/xsessions/xfce.desktop ]; then
@@ -76,7 +76,7 @@ mkdir -p "$PIC_DIR"
 cp -f "$SRC_DIR/wallpaper_sim.png" "$PIC_DIR/" 2>/dev/null || true
 cp -f "$SRC_DIR/patch_sim.png"     "$PIC_DIR/" 2>/dev/null || true
 cp -f "$SRC_DIR/avatar_sim.png"    "$PIC_DIR/" 2>/dev/null || true
-chown -R "$USER_NAME:$USER_NAME" "$PIC_DIR"
+chown -R "$USER_NAME:$USER_NAME" "$PIC_DIR" || true
 
 # -----------------------
 # Wallpaper XFCE
@@ -86,56 +86,45 @@ chown -R "$USER_NAME:$USER_NAME" "$PIC_DIR"
 # -----------------------
 echo "=== XFCE wallpaper ==="
 
-XFCONF_DIR="$HOME_DIR/.config/xfce4/xfconf/xfce-perchannel-xml"
-mkdir -p "$XFCONF_DIR"
 WALL="$PIC_DIR/wallpaper_sim.png"
 
-cat << EOF > "$XFCONF_DIR/xfce4-desktop.xml"
-<?xml version="1.0" encoding="UTF-8"?>
-<channel name="xfce4-desktop" version="1.0">
-  <property name="backdrop" type="empty">
-    <property name="screen0" type="empty">
-      <property name="monitorVirtual-1" type="empty">
-        <property name="workspace0" type="empty">
-          <property name="last-image" type="string" value="$WALL"/>
-          <property name="image-style" type="int" value="5"/>
-          <property name="color-style" type="int" value="0"/>
-        </property>
-      </property>
-      <property name="monitorVirtual1" type="empty">
-        <property name="workspace0" type="empty">
-          <property name="last-image" type="string" value="$WALL"/>
-          <property name="image-style" type="int" value="5"/>
-          <property name="color-style" type="int" value="0"/>
-        </property>
-      </property>
-      <property name="monitor0" type="empty">
-        <property name="workspace0" type="empty">
-          <property name="last-image" type="string" value="$WALL"/>
-          <property name="image-style" type="int" value="5"/>
-          <property name="color-style" type="int" value="0"/>
-        </property>
-      </property>
-      <property name="monitorHDMI-1" type="empty">
-        <property name="workspace0" type="empty">
-          <property name="last-image" type="string" value="$WALL"/>
-          <property name="image-style" type="int" value="5"/>
-          <property name="color-style" type="int" value="0"/>
-        </property>
-      </property>
-      <property name="monitorDP-1" type="empty">
-        <property name="workspace0" type="empty">
-          <property name="last-image" type="string" value="$WALL"/>
-          <property name="image-style" type="int" value="5"/>
-          <property name="color-style" type="int" value="0"/>
-        </property>
-      </property>
-    </property>
-  </property>
-</channel>
-EOF
+# Script dynamique : applique le wallpaper sur tous les moniteurs detectes
+cat << 'WALLEOF' > /usr/local/bin/planamo-set-wallpaper
+#!/bin/bash
+WALL="/home/analyste/Pictures/wallpaper_sim.png"
+[ -f "$WALL" ] || exit 0
 
-chown -R "$USER_NAME:$USER_NAME" "$HOME_DIR/.config"
+for i in $(seq 1 30); do
+  pgrep xfdesktop >/dev/null 2>&1 && break
+  sleep 0.5
+done
+sleep 1
+
+for monitor in $(xrandr --query 2>/dev/null | grep ' connected' | awk '{print $1}'); do
+  for screen in 0 1; do
+    xfconf-query -c xfce4-desktop       -p "/backdrop/screen${screen}/monitor${monitor}/workspace0/last-image"       --create -t string -s "$WALL" 2>/dev/null || true
+    xfconf-query -c xfce4-desktop       -p "/backdrop/screen${screen}/monitor${monitor}/workspace0/image-style"       --create -t int -s 5 2>/dev/null || true
+  done
+done
+
+xfdesktop --reload 2>/dev/null || true
+WALLEOF
+chmod +x /usr/local/bin/planamo-set-wallpaper
+
+mkdir -p /etc/xdg/autostart
+cat << 'AEOF' > /etc/xdg/autostart/planamo-wallpaper.desktop
+[Desktop Entry]
+Type=Application
+Name=PLANAMO Wallpaper
+Exec=/usr/local/bin/planamo-set-wallpaper
+Terminal=false
+OnlyShowIn=XFCE;
+X-GNOME-Autostart-enabled=true
+NoDisplay=true
+AEOF
+
+mkdir -p "$HOME_DIR/.config"
+chown -R "$USER_NAME:$USER_NAME" "$HOME_DIR/.config" || true
 
 # -----------------------
 # Icônes bureau
@@ -158,7 +147,7 @@ chmod +x /etc/skel/Desktop/PLANAMO-Documentation.desktop
 cat << 'EOF' > /etc/skel/Desktop/Install-PLANAMO.desktop
 [Desktop Entry]
 Name=Install PLANAMO
-Exec=xfce4-terminal --title="PLANAMO Installer" --hide-menubar --disable-server -e "sudo /usr/local/bin/planamo-install"
+Exec=xterm -title "PLANAMO Installer" -fa "Monospace" -fs 11 -geometry 100x35 -e "sudo /usr/local/bin/planamo-install"
 Icon=system-software-install
 Terminal=false
 Type=Application
@@ -170,7 +159,7 @@ chmod +x /etc/skel/Desktop/Install-PLANAMO.desktop
 # Elle se supprime d'elle-meme a la fin de planamo-install
 cp -f /etc/skel/Desktop/PLANAMO-Documentation.desktop "$HOME_DIR/Desktop/"
 cp -f /etc/skel/Desktop/Install-PLANAMO.desktop "$HOME_DIR/Desktop/"
-chown -R "$USER_NAME:$USER_NAME" "$HOME_DIR/Desktop/"
+chown -R "$USER_NAME:$USER_NAME" "$HOME_DIR/Desktop/" || true
 chmod +x "$HOME_DIR/Desktop/"*.desktop
 
 # -----------------------

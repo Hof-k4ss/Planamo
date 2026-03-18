@@ -28,6 +28,10 @@ SQUASHFS="/cdrom/casper/filesystem.squashfs"
 TITLE="PLANAMO Installer"
 LOG="/tmp/planamo-install.log"
 
+# Forcer TERM compatible dialog, desactiver souris
+export TERM=xterm
+export DIALOGOPTS="--no-mouse"
+
 exec > >(tee -a "$LOG") 2>&1
 echo "[*] PLANAMO Install started: $(date)"
 
@@ -241,13 +245,16 @@ chmod +x /usr/local/bin/planamo-install
 # --- Wrapper GUI ---
 cat > /usr/local/bin/planamo-install-gui << 'EOF'
 #!/bin/bash
-exec xfce4-terminal \
-  --title="PLANAMO Installer" \
-  --hide-menubar \
-  --disable-server \
-  -e "bash -c 'sudo /usr/local/bin/planamo-install; read -p \'Appuyez sur Entree pour fermer...\' _'"
+exec xterm \
+  -title "PLANAMO Installer" \
+  -fa "Monospace" -fs 11 \
+  -geometry 100x35 \
+  -e "sudo /usr/local/bin/planamo-install"
 EOF
 chmod +x /usr/local/bin/planamo-install-gui
+
+# S'assurer que xterm est installe
+apt-get install -y xterm 2>/dev/null || true
 
 # --- Binaire rtfm (documentation) ---
 cat > /usr/local/bin/rtfm << 'EOF'
