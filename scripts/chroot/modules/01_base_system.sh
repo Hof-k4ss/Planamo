@@ -41,7 +41,8 @@ apt install -y \
     gvfs \
     gvfs-backends \
     lightdm \
-    lightdm-gtk-greeter
+    lightdm-gtk-greeter \
+    libreoffice
 
 systemctl enable lightdm
 
