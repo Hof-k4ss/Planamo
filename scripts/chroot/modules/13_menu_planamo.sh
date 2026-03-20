@@ -197,20 +197,18 @@ cat > /usr/share/desktop-directories/planamo-docker.directory << 'EOF'
 Type=Directory
 EOF
 
-# Configurer xfce4-panel pour utiliser notre menu custom
-mkdir -p /etc/xdg/xfce4/xfconf/xfce-perchannel-xml
-cat > /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<channel name="xfce4-panel" version="1.0">
-  <property name="plugins" type="empty">
-    <property name="plugin-1" type="string" value="applicationsmenu">
-      <property name="menu-file" type="string" value="/etc/xdg/menus/xfce-applications.menu"/>
-      <property name="custom-menu" type="bool" value="true"/>
-      <property name="show-button-title" type="bool" value="true"/>
-      <property name="button-title" type="string" value="Applications"/>
-    </property>
-  </property>
-</channel>
-EOF
+# Configurer le menu custom via autostart xfconf-query
+# (évite d'écraser toute la config panel avec un XML incomplet)
+mkdir -p /etc/xdg/autostart
+cat << 'AEOF' > /etc/xdg/autostart/planamo-panel-menu.desktop
+[Desktop Entry]
+Type=Application
+Name=PLANAMO Panel Menu
+Exec=bash -c 'sleep 3; xfconf-query -c xfce4-panel -p /plugins/plugin-1/menu-file --create -t string -s "/etc/xdg/menus/xfce-applications.menu" 2>/dev/null; xfconf-query -c xfce4-panel -p /plugins/plugin-1/custom-menu --create -t bool -s true 2>/dev/null'
+Terminal=false
+OnlyShowIn=XFCE;
+X-GNOME-Autostart-enabled=true
+NoDisplay=true
+AEOF
 
 echo "=== PLANAMO menu installed ==="
