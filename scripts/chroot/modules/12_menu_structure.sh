@@ -5,6 +5,7 @@ APP_DIR="/usr/share/applications"
 MAP_FILE="/root/tools_map.conf"
 
 echo "=== Generating PLANAMO launchers (menu categories) ==="
+
 mkdir -p "$APP_DIR"
 
 slugify() {
@@ -26,30 +27,78 @@ theme_to_cat() {
   esac
 }
 
-while IFS='|' read -r name cmd themes type; do
+tool_icon() {
+  local cmd="$1"
+  local type="$2"
+  case "$cmd" in
+    adb|fastboot|androidqf)          echo "phone" ;;
+    ideviceinfo|idevicebackup2|\
+    idevicesyslog|idevicecrashreport) echo "phone" ;;
+    mvt-android|mvt-ios)             echo "security-medium" ;;
+    sqlitebrowser)                   echo "database" ;;
+    exiftool)                        echo "image-x-generic" ;;
+    androguard|apktool|jadx-gui)     echo "package-x-generic" ;;
+    yara|clamscan)                   echo "dialog-warning" ;;
+    binwalk|strings|hexedit)         echo "applications-science" ;;
+    r2|rizin|frida|upx)              echo "applications-engineering" ;;
+    dc3dd|ddrescue|partclone)        echo "drive-harddisk" ;;
+    gparted|testdisk|photorec)       echo "drive-harddisk" ;;
+    tsk_recover|foremost)            echo "edit-find" ;;
+    cryptsetup)                      echo "security-high" ;;
+    volatility3)                     echo "media-flash" ;;
+    tcpdump|nmap|nc|socat)           echo "network-wired" ;;
+    ssh|rsync)                       echo "network-transmit-receive" ;;
+    dig|whois)                       echo "network-server" ;;
+    firefox)                         echo "firefox" ;;
+    tor-browser)                     echo "tor" ;;
+    proxychains4)                    echo "network-vpn" ;;
+    curl|wget)                       echo "internet-web-browser" ;;
+    jq|rg)                           echo "edit-find" ;;
+    python3)                         echo "text-x-python" ;;
+    git)                             echo "git" ;;
+    code)                            echo "code" ;;
+    terminator)                      echo "utilities-terminal" ;;
+    tmux)                            echo "utilities-terminal" ;;
+    docker|mobsf|remnux)             echo "application-x-executable" ;;
+    *)
+      if [ "$type" = "gui" ]; then
+        echo "applications-system"
+      else
+        echo "utilities-terminal"
+      fi
+      ;;
+  esac
+}
+
+while IFS='|' read -r name cmd themes type description; do
   [[ -z "$name" || "$name" =~ ^# ]] && continue
 
+  name="${name#"${name%%[![:space:]]*}"}"; name="${name%"${name##*[![:space:]]}"}" 
+  cmd="${cmd#"${cmd%%[![:space:]]*}"}"; cmd="${cmd%"${cmd##*[![:space:]]}"}" 
+  themes="${themes#"${themes%%[![:space:]]*}"}"; themes="${themes%"${themes##*[![:space:]]}"}" 
+  type="${type#"${type%%[![:space:]]*}"}"; type="${type%"${type##*[![:space:]]}"}" 
+
+  # Ne pas bloquer si la commande n'est pas dans le PATH
+  # (certains outils sont dans /opt ou installés plus tard)
   bin="${cmd%% *}"
-  command -v "$bin" >/dev/null 2>&1 || continue
 
   file="planamo-$(slugify "$name").desktop"
+  icon="$(tool_icon "$bin" "$type")"
 
   cats=""
   IFS=',' read -ra tarr <<< "$themes"
   for raw in "${tarr[@]}"; do
-    t="$(echo "$raw" | xargs)"
+    t="${raw#"${raw%%[![:space:]]*}"}"; t="${t%"${t##*[![:space:]]}"}"
     c="$(theme_to_cat "$t")"
     cats="${cats}${c};"
   done
-
-  type="$(echo "$type" | xargs)"
 
   if [ "$type" = "gui" ]; then
     cat > "$APP_DIR/$file" << EOF
 [Desktop Entry]
 Name=$name
 Exec=$cmd
-Icon=applications-system
+Icon=$icon
 Terminal=false
 Type=Application
 Categories=$cats
@@ -59,7 +108,7 @@ EOF
 [Desktop Entry]
 Name=$name
 Exec=xfce4-terminal -e "bash -lc '$cmd; exec bash'"
-Icon=utilities-terminal
+Icon=$icon
 Terminal=false
 Type=Application
 Categories=$cats
@@ -69,4 +118,5 @@ EOF
 done < "$MAP_FILE"
 
 command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$APP_DIR" || true
+
 echo "=== PLANAMO launchers generated ==="

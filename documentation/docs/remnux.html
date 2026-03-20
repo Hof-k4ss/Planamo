@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REMnux — Guide d'utilisation PLANAMO</title>
+<style>
+  :root {
+    --green: #3DDC84;
+    --green-dark: #2bb56a;
+    --bg: #0d0d0d;
+    --bg2: #1c1c1e;
+    --bg3: #2c2c2e;
+    --text: #f5f5f7;
+    --text-muted: #a1a1a6;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    --mono: "SF Mono", "Fira Code", monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.7;
+  }
+
+  header {
+    background: #111;
+    border-bottom: 2px solid var(--green);
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  header h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--green);
+  }
+
+  header span {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  nav {
+    background: var(--bg2);
+    border-radius: 12px;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--bg3);
+  }
+
+  nav h3 {
+    color: var(--green);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.8rem;
+  }
+
+  nav a {
+    display: block;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 0.2rem 0;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+  }
+
+  nav a:hover { color: var(--green); }
+
+  section {
+    margin-bottom: 3rem;
+  }
+
+  h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--green);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--bg3);
+  }
+
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 1.5rem 0 0.5rem;
+  }
+
+  p { color: var(--text-muted); margin-bottom: 0.8rem; }
+
+  .cmd-block {
+    background: var(--bg2);
+    border: 1px solid var(--bg3);
+    border-left: 3px solid var(--green);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    margin: 0.8rem 0;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--green);
+    position: relative;
+    overflow-x: auto;
+  }
+
+  .cmd-block .comment {
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: var(--bg3);
+    border: none;
+    color: var(--text-muted);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.2s;
+  }
+
+  .copy-btn:hover { background: var(--green); color: #000; }
+
+  .badge {
+    display: inline-block;
+    background: var(--bg3);
+    color: var(--green);
+    border-radius: 20px;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin: 0.2rem;
+  }
+
+  .tool-card {
+    background: var(--bg2);
+    border: 1px solid var(--bg3);
+    border-radius: 12px;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .tool-card h4 {
+    color: var(--text);
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+
+  .tool-card p { font-size: 0.9rem; margin-bottom: 0.6rem; }
+
+  .warning {
+    background: #1a1200;
+    border: 1px solid #665500;
+    border-radius: 8px;
+    padding: 0.8rem 1.2rem;
+    color: #ffcc00;
+    font-size: 0.9rem;
+    margin: 1rem 0;
+  }
+
+  .info {
+    background: #001a0d;
+    border: 1px solid var(--green-dark);
+    border-radius: 8px;
+    padding: 0.8rem 1.2rem;
+    color: var(--green);
+    font-size: 0.9rem;
+    margin: 1rem 0;
+  }
+
+  code {
+    background: var(--bg3);
+    color: var(--green);
+    padding: 0.1em 0.4em;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 0.85em;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  th {
+    background: var(--bg3);
+    color: var(--green);
+    font-weight: 600;
+    padding: 0.7rem 1rem;
+    text-align: left;
+    font-size: 0.85rem;
+  }
+
+  td {
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--bg3);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #141414; }
+
+  footer {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    border-top: 1px solid var(--bg3);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🦠 REMnux</h1>
+  <span>Guide d'utilisation — PLANAMO Forensics</span>
+</header>
+
+<div class="container">
+
+  <nav>
+    <h3>Sommaire</h3>
+    <a href="#intro">Introduction</a>
+    <a href="#lancer">Lancer REMnux via Docker</a>
+    <a href="#modes">Modes d'utilisation</a>
+    <a href="#outils-statiques">Analyser des propriétés statiques</a>
+    <a href="#outils-code">Analyser du code malveillant</a>
+    <a href="#outils-reseau">Explorer les interactions réseau</a>
+    <a href="#outils-documents">Analyser des documents</a>
+    <a href="#outils-containers">Images Docker individuelles</a>
+    <a href="#workflow">Workflow type PLANAMO</a>
+  </nav>
+
+  <!-- INTRO -->
+  <section id="intro">
+    <h2>Introduction</h2>
+    <p>REMnux est une distribution Linux spécialisée dans l'analyse de malwares, intégrée à PLANAMO sous forme de conteneur Docker. Elle regroupe des centaines d'outils forensiques préconfigurés pour l'analyse statique, dynamique, réseau et documentaire.</p>
+    <div class="info">Sur PLANAMO, REMnux est disponible hors ligne — l'image Docker est préchargée dans <code>/opt/planamo/docker/</code>.</div>
+    <div class="warning">REMnux s'exécute en conteneur éphémère. Toute modification à l'intérieur sera perdue à la fermeture. Utilisez le répertoire partagé pour persister vos fichiers.</div>
+  </section>
+
+  <!-- LANCER -->
+  <section id="lancer">
+    <h2>Lancer REMnux via Docker</h2>
+
+    <h3>Méthode rapide — wrapper PLANAMO</h3>
+    <p>Le wrapper <code>remnux</code> lance automatiquement le conteneur avec votre répertoire de travail partagé :</p>
+    <div class="cmd-block">
+      <button class="copy-btn" onclick="copyCmd(this)">Copier</button>
+      remnux
+    </div>
+    <p>Cela crée le dossier <code>~/remnux-workdir/</code> sur votre machine et le monte dans le conteneur sous <code>/home/remnux/files/</code>. Placez vos fichiers à analyser dans ce dossier.</p>
+
+    <h3>Lancement manuel</h3>
+    <div class="cmd-block">
+      <button class="copy-btn" onclick="copyCmd(this)">Copier</button>
+      <span class="comment"># Shell interactif simple</span><br>
+      docker run --rm -it -u remnux remnux/remnux-distro:noble bash
+    </div>
+
+    <div class="cmd-block">
+      <button class="copy-btn" onclick="copyCmd(this)">Copier</button>
+      <span class="comment"># Avec répertoire partagé</span><br>
+      docker run --rm -it -u remnux -v ~/workdir:/home/remnux/files remnux/remnux-distro:noble bash
+    </div>
+
+    <div class="cmd-block">
+      <button class="copy-btn" onclick="copyCmd(this)">Copier</button>
+      <span class="comment"># Conteneur persistant en arrière-plan (SSH sur port 22)</span><br>
+      docker run -d -p 22:22 remnux/remnux-distro:noble
+    </div>
+
+    <h3>Options Docker utiles</h3>
+    <table>
+      <tr><th>Option</th><th>Description</th></tr>
+      <tr><td><code>--rm</code></td><td>Supprime le conteneur à la fermeture</td></tr>
+      <tr><td><code>-it</code></td><td>Mode interactif avec TTY</td></tr>
+      <tr><td><code>-u remnux</code></td><td>Lance en tant qu'utilisateur remnux</td></tr>
+      <tr><td><code>-v src:dst</code></td><td>Monte un répertoire local dans le conteneur</td></tr>
+      <tr><td><code>-d</code></td><td>Mode détaché (arrière-plan)</td></tr>
+      <tr><td><code>-p 22:22</code></td><td>Expose le port SSH</td></tr>
+    </table>
+  </section>
+
+  <!-- MODES -->
+  <section id="modes">
+    <h2>Modes d'utilisation</h2>
+
+    <h3>Mode analyse rapide (éphémère)</h3>
+    <p>Pour analyser un fichier rapidement sans garder le conteneur :</p>
+    <div class="cmd-block">
+      <button class="copy-btn" onclick="copyCmd(this)">Copier</button>
+      docker run --rm -it -u remnux -v ~/workdir:/home/remnux/files remnux/remnux-distro:noble bash
+    </div>
+
+    <h3>Mode session persistante</h3>
+    <p>Pour conserver les modifications entre les sessions :</p>
+    <div class="cmd-block">
+      <button class="copy-btn" onclick="copyCmd(this)">Copier</button>
+      <span class="comment"># Créer le conteneur sans --rm</span><br>
+      docker run -it -u remnux -v ~/workdir:/home/remnux/files --name remnux-lab remnux/remnux-distro:noble bash<br><br>
+      <span class="comment"># Reprendre la session plus tard</span><br>
+      docker start -ai remnux-lab
+    </div>
+  </section>
+
+  <!-- OUTILS STATIQUES -->
+  <section id="outils-statiques">
+    <h2>Analyser des propriétés statiques</h2>
+    <p>Ces outils permettent d'examiner un fichier sans l'exécuter.</p>
+
+    <div class="tool-card">
+      <h4>file — Identifier le type de fichier</h4>
+      <p>Détecte le type réel d'un fichier indépendamment de son extension.</p>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>file malware.bin</div>
+    </div>
+
+    <div class="tool-card">
+      <h4>strings — Extraire les chaînes lisibles</h4>
+      <p>Affiche les chaînes ASCII et Unicode d'un binaire.</p>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>strings -a -n 8 malware.exe | less</div>
+    </div>
+
+    <div class="tool-card">
+      <h4>exiftool — Métadonnées</h4>
+      <p>Extrait les métadonnées de tout type de fichier.</p>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>exiftool document.pdf</div>
+    </div>
+
+    <div class="tool-card">
+      <h4>pecheck / pescanner — Analyse PE</h4>
+      <p>Analyse les fichiers exécutables Windows (PE).</p>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>pecheck malware.exe</div>
+    </div>
+
+    <div class="tool-card">
+      <h4>ssdeep — Hash flou (fuzzy hashing)</h4>
+      <p>Génère un hash flou pour comparer des fichiers similaires.</p>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>ssdeep malware.exe<br>ssdeep -m known_hashes.txt malware.exe</div>
+    </div>
+
+    <div class="tool-card">
+      <h4>yara — Détection par règles</h4>
+      <p>Scanne un fichier avec des règles YARA.</p>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>yara -r /path/to/rules.yar malware.bin</div>
+    </div>
+  </section>
+
+  <!-- OUTILS CODE -->
+  <section id="outils-code">
+    <h2>Analyser du code malveillant</h2>
+
+    <div class="tool-card">
+      <h4>uncompyle6 / decompile3 — Décompiler Python</h4>
+      <p>Reconstruit le code source Python depuis un fichier .pyc</p>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>uncompyle6 malware.pyc</div>
+    </div>
+
+    <div class="tool-card">
+      <h4>js-beautify — Déobfusquer JavaScript</h4>
+      <p>Reformate et rend lisible du JavaScript obfusqué.</p>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>js-beautify -o clean.js malware.js</div>
+    </div>
+
+    <div class="tool-card">
+      <h4>vmonkey — Analyser macros VBA</h4>
+      <p>Extrait et analyse les macros VBA de documents Office.</p>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>vmonkey document.doc</div>
+    </div>
+
+    <div class="tool-card">
+      <h4>oledump — Analyser fichiers OLE</h4>
+      <p>Inspecte les flux OLE dans les documents Office.</p>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>oledump.py malicious.doc<br>oledump.py -s 3 -v malicious.doc</div>
+    </div>
+  </section>
+
+  <!-- OUTILS RESEAU -->
+  <section id="outils-reseau">
+    <h2>Explorer les interactions réseau</h2>
+
+    <div class="tool-card">
+      <h4>Wireshark / tshark — Analyser des captures réseau</h4>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>tshark -r capture.pcap -Y "http" -T fields -e http.request.uri</div>
+    </div>
+
+    <div class="tool-card">
+      <h4>netsed — Modifier le trafic réseau</h4>
+      <p>Intercepte et modifie les paquets réseau en temps réel.</p>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>netsed tcp 9999 0 8080 's/evil.com/localhost/g'</div>
+    </div>
+
+    <div class="tool-card">
+      <h4>Thug — Honeyclient web</h4>
+      <p>Simule un navigateur pour analyser des URLs suspectes.</p>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>docker run --rm -it --entrypoint "/bin/bash" remnux/thug<br><span class="comment"># Puis dans le conteneur :</span><br>thug -F http://suspicious-url.com</div>
+    </div>
+  </section>
+
+  <!-- OUTILS DOCUMENTS -->
+  <section id="outils-documents">
+    <h2>Analyser des documents</h2>
+
+    <div class="tool-card">
+      <h4>pdfid / pdf-parser — Analyser PDF</h4>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>pdfid malicious.pdf<br>pdf-parser -a malicious.pdf</div>
+    </div>
+
+    <div class="tool-card">
+      <h4>peepdf — Analyse approfondie PDF</h4>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>peepdf -i malicious.pdf</div>
+    </div>
+
+    <div class="tool-card">
+      <h4>oletools — Suite Office</h4>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>oleid malicious.doc<br>olevba malicious.doc<br>rtfobj malicious.rtf</div>
+    </div>
+  </section>
+
+  <!-- IMAGES DOCKER INDIVIDUELLES -->
+  <section id="outils-containers">
+    <h2>Images Docker individuelles REMnux</h2>
+    <p>REMnux propose aussi des images Docker pour des outils spécifiques.</p>
+
+    <div class="tool-card">
+      <h4>Binary Refinery — Transformation de données binaires</h4>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>docker run --rm -it -v ~/workdir:/home/nonroot/workdir remnux/binary-refinery</div>
+    </div>
+
+    <div class="tool-card">
+      <h4>Rizin — Reverse engineering</h4>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>docker run --rm -it -v ~/workdir:/home/nonroot/workdir remnux/rizin</div>
+    </div>
+
+    <div class="tool-card">
+      <h4>Radare2 — Reverse engineering</h4>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>docker run --rm -it -v ~/workdir:/home/nonroot/workdir remnux/radare2</div>
+    </div>
+
+    <div class="tool-card">
+      <h4>RetDec — Décompilateur multi-architecture</h4>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>docker run --rm -it -v ~/workdir:/home/retdec/workdir remnux/retdec</div>
+    </div>
+
+    <div class="tool-card">
+      <h4>PyLingual — Décompilateur Python bytecode</h4>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>docker run --rm -it -v ~/workdir:/home/nonroot/workdir remnux/pylingual</div>
+    </div>
+
+    <div class="tool-card">
+      <h4>Thug — Honeyclient web</h4>
+      <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>docker run --rm -it --entrypoint "/bin/bash" remnux/thug</div>
+    </div>
+  </section>
+
+  <!-- WORKFLOW -->
+  <section id="workflow">
+    <h2>Workflow type PLANAMO + REMnux</h2>
+    <p>Exemple d'analyse d'un APK ou binaire suspect :</p>
+
+    <h3>1. Préparer le répertoire de travail</h3>
+    <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>mkdir -p ~/remnux-workdir<br>cp /chemin/vers/malware.apk ~/remnux-workdir/</div>
+
+    <h3>2. Lancer REMnux</h3>
+    <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>remnux</div>
+
+    <h3>3. Dans le conteneur — analyse statique</h3>
+    <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>cd /home/remnux/files<br>file malware.apk<br>strings -a -n 8 malware.apk | grep -i "http\|url\|api\|key"<br>ssdeep malware.apk</div>
+
+    <h3>4. Identifier les IOCs réseau</h3>
+    <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>strings malware.apk | grep -E "([0-9]{1,3}\.){3}[0-9]{1,3}|https?://"</div>
+
+    <h3>5. Scan YARA</h3>
+    <div class="cmd-block"><button class="copy-btn" onclick="copyCmd(this)">Copier</button>yara -r /usr/share/yara-rules/ malware.apk 2>/dev/null</div>
+
+    <div class="info">Les résultats dans <code>/home/remnux/files/</code> sont automatiquement disponibles dans <code>~/remnux-workdir/</code> sur PLANAMO.</div>
+  </section>
+
+</div>
+
+<footer>
+  PLANAMO — Documentation REMnux | Basé sur <a href="https://docs.remnux.org" style="color: var(--green);">docs.remnux.org</a>
+</footer>
+
+<script>
+function copyCmd(btn) {
+  const block = btn.parentElement;
+  const text = Array.from(block.childNodes)
+    .filter(n => n.nodeType === 3 || (n.nodeType === 1 && !n.classList.contains('copy-btn') && !n.classList.contains('comment')))
+    .map(n => n.textContent)
+    .join('')
+    .trim();
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓';
+    setTimeout(() => btn.textContent = 'Copier', 1500);
+  });
+}
+</script>
+
+</body>
+</html>

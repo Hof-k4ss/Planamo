@@ -18,20 +18,18 @@ load_all_from_dir() {
   echo "[*] Loading ALL docker images from $SRC"
   shopt -s nullglob
 
-  # 1) .tar simples
   for tar in "$SRC"/*.tar; do
     echo "[+] docker load -i $tar"
     docker load -i "$tar"
   done
 
-  # 2) split numériques: *.tar.part-000 ...
   bases=$(ls "$SRC"/*.tar.part-[0-9][0-9][0-9] 2>/dev/null | sed 's/\.part-...$//' | sort -u || true)
   for base in $bases; do
     echo "[+] docker load (split) from ${base}.part-000..."
     ls "${base}".part-[0-9][0-9][0-9] | sort | cat | docker load
   done
 
-  echo "[✓] Done."
+  echo "[OK] Done."
 }
 
 load_mobsf_live_only() {
@@ -43,20 +41,16 @@ load_mobsf_live_only() {
 
   echo "[*] Live mode detected (overlay): loading MobSF only (temporary dockerd vfs)"
 
-  # stop docker service if present
   sudo systemctl stop docker >/dev/null 2>&1 || true
-
   sudo rm -rf /tmp/planamo-docker-vfs
   sudo mkdir -p /tmp/planamo-docker-vfs
 
-  # start temporary dockerd
   sudo dockerd \
     --data-root=/tmp/planamo-docker-vfs \
     --storage-driver=vfs \
     -H unix:///tmp/planamo-docker.sock \
     >/tmp/planamo-dockerd.log 2>&1 &
 
-  # wait until ready
   for i in {1..30}; do
     if sudo docker -H unix:///tmp/planamo-docker.sock info >/dev/null 2>&1; then
       break
@@ -67,7 +61,7 @@ load_mobsf_live_only() {
   echo "[+] docker load -i $MOBSF_TAR"
   sudo docker -H unix:///tmp/planamo-docker.sock load -i "$MOBSF_TAR"
 
-  echo "[✓] MobSF loaded (live)."
+  echo "[OK] MobSF loaded (live)."
   echo "    Docker socket: /tmp/planamo-docker.sock"
 }
 
@@ -76,42 +70,71 @@ main() {
     load_mobsf_live_only
     exit $?
   fi
-
-  # système installé
   load_all_from_dir "$INST_SRC"
 }
 
 main "$@"
 EOF
-
 chmod +x /usr/local/bin/planamo-docker-load
 
-# --- Wrapper MobSF ---
+# --- Wrapper MobSF corrigé ---
+# Attend que MobSF soit réellement prêt avant d'ouvrir Firefox
 cat <<'EOF' > /usr/local/bin/mobsf
 #!/bin/bash
-set -e
+CONTAINER="mobsf"
+PORT="8000"
+URL="http://127.0.0.1:$PORT"
+IMAGE="opensecurity/mobile-security-framework-mobsf:latest"
 
-# Démarre MobSF (assume image déjà loadée)
-docker rm -f mobsf 2>/dev/null || true
-docker run -d -p 8000:8000 --name mobsf opensecurity/mobile-security-framework-mobsf:latest
+echo "[*] Démarrage de MobSF..."
+docker rm -f "$CONTAINER" 2>/dev/null || true
+docker run -d -p ${PORT}:${PORT} --name "$CONTAINER" "$IMAGE"
 
-sleep 30
-firefox http://127.0.0.1:8000 >/dev/null 2>&1 || true
-echo "[+] MobSF running: http://127.0.0.1:8000"
+echo "[*] Attente que MobSF soit prêt (peut prendre 30-60 secondes)..."
+TIMEOUT=120
+ELAPSED=0
+while [ $ELAPSED -lt $TIMEOUT ]; do
+  STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "$URL" 2>/dev/null || echo "000")
+  if [ "$STATUS" = "200" ] || [ "$STATUS" = "302" ]; then
+    echo "[+] MobSF est prêt !"
+    break
+  fi
+  sleep 3
+  ELAPSED=$((ELAPSED + 3))
+  echo "[*] En attente... ($ELAPSED/${TIMEOUT}s) [HTTP $STATUS]"
+done
+
+if [ $ELAPSED -ge $TIMEOUT ]; then
+  echo "[!] Timeout — MobSF tarde à démarrer"
+fi
+
+echo "[+] MobSF disponible : $URL"
+firefox "$URL" >/dev/null 2>&1 &
 EOF
 chmod +x /usr/local/bin/mobsf
 
-# --- Wrapper REMnux ---
+# --- Wrapper REMnux corrigé ---
+# Lance avec répertoire partagé et image noble
 cat <<'EOF' > /usr/local/bin/remnux
 #!/bin/bash
-set -e
+IMAGE="remnux/remnux-distro:noble"
+WORKDIR="$HOME/remnux-workdir"
 
-# Shell interactif dans REMnux (assume image déjà loadée)
-docker run --rm -it remnux/remnux-distro:latest bash
+mkdir -p "$WORKDIR"
+
+echo "[*] Lancement de REMnux"
+echo "[*] Répertoire partagé : $WORKDIR -> /home/remnux/files"
+echo ""
+
+docker run --rm -it \
+  -u remnux \
+  -v "$WORKDIR":/home/remnux/files \
+  --name remnux-session \
+  "$IMAGE" bash
 EOF
 chmod +x /usr/local/bin/remnux
 
-# --- Wrapper MobSF (LIVE) ---
+# --- Wrapper MobSF LIVE ---
 cat <<'EOF' > /usr/local/bin/mobsf-live
 #!/bin/bash
 set -euo pipefail
@@ -129,11 +152,8 @@ start_temp_dockerd() {
   command -v dockerd >/dev/null 2>&1 || { echo "[!] dockerd not found"; exit 1; }
 
   sudo systemctl stop docker >/dev/null 2>&1 || true
-
   sudo rm -rf "$DATA"
   sudo mkdir -p "$DATA"
-
-  # kill old dockerd if any
   sudo pkill -f "dockerd.*planamo-docker.sock" >/dev/null 2>&1 || true
   sudo rm -f /tmp/planamo-docker.sock
 
@@ -143,7 +163,6 @@ start_temp_dockerd() {
     -H "$SOCK" \
     >"$LOG" 2>&1 &
 
-  # wait ready
   for i in {1..60}; do
     if sudo docker -H "$SOCK" info >/dev/null 2>&1; then
       return 0
@@ -156,7 +175,6 @@ start_temp_dockerd() {
 }
 
 load_mobsf_image() {
-  # tar standard
   local tar1="$LIVE_SRC/opensecurity_mobile-security-framework-mobsf_latest.tar"
   if [ -f "$tar1" ]; then
     echo "[+] Loading MobSF tar: $tar1"
@@ -164,7 +182,6 @@ load_mobsf_image() {
     return 0
   fi
 
-  # split: ...tar.part-000 ...
   local base
   base="$(ls "$LIVE_SRC"/opensecurity_mobile-security-framework-mobsf_latest.tar.part-000 2>/dev/null | sed 's/\.part-...$//' || true)"
   if [ -n "$base" ]; then
@@ -179,20 +196,26 @@ load_mobsf_image() {
 
 run_mobsf() {
   sudo docker -H "$SOCK" rm -f mobsf 2>/dev/null || true
-  sudo docker -H "$SOCK" run -d -p 8000:8000 --name mobsf opensecurity/mobile-security-framework-mobsf:latest
+  sudo docker -H "$SOCK" run -d -p 8000:8000 --name mobsf \
+    opensecurity/mobile-security-framework-mobsf:latest
 
-  sleep 30
+  echo "[*] Attente que MobSF soit prêt..."
+  TIMEOUT=120
+  ELAPSED=0
+  while [ $ELAPSED -lt $TIMEOUT ]; do
+    STATUS=$(curl -sf -o /dev/null -w "%{http_code}" http://127.0.0.1:8000 2>/dev/null || echo "000")
+    if [ "$STATUS" = "200" ] || [ "$STATUS" = "302" ]; then
+      echo "[+] MobSF est prêt !"
+      break
+    fi
+    sleep 3
+    ELAPSED=$((ELAPSED + 3))
+    echo "[*] En attente... ($ELAPSED/${TIMEOUT}s) [HTTP $STATUS]"
+  done
 
-  # ouvre navigateur si dispo
-  if command -v firefox >/dev/null 2>&1; then
-    firefox http://127.0.0.1:8000 >/dev/null 2>&1 || true
-  elif command -v tor-browser >/dev/null 2>&1; then
-    tor-browser http://127.0.0.1:8000 >/dev/null 2>&1 || true
-  fi
-
+  firefox http://127.0.0.1:8000 >/dev/null 2>&1 &
   echo "[+] MobSF running (LIVE): http://127.0.0.1:8000"
   echo "    Docker socket: $SOCK"
-  echo "    Logs: $LOG"
 }
 
 main() {
@@ -200,7 +223,6 @@ main() {
     echo "[!] Not in live overlay mode. Use: mobsf"
     exit 1
   fi
-
   start_temp_dockerd
   load_mobsf_image
   run_mobsf

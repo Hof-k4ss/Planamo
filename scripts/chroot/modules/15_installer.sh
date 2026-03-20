@@ -83,15 +83,22 @@ echo "[1/6] Partitionnement..."
 wipefs -af "$TARGET"    || error_exit "wipefs echoue sur $TARGET"
 sgdisk --zap-all "$TARGET" || error_exit "sgdisk zap echoue"
 
+# Prefixe partition : nvme/mmcblk utilisent 'p' (nvme0n1p1), sata non (sda1)
+if echo "$TARGET" | grep -qE '(nvme|mmcblk)'; then
+  PART_PREFIX="${TARGET}p"
+else
+  PART_PREFIX="${TARGET}"
+fi
+
 if $EFI_MODE; then
   sgdisk -n 1:0:+512M -t 1:EF00 -c 1:"EFI"  "$TARGET" || error_exit "Partition EFI echouee"
   sgdisk -n 2:0:0     -t 2:8300 -c 2:"ROOT" "$TARGET" || error_exit "Partition ROOT echouee"
-  EFI_PART="${TARGET}1"
-  ROOT_PART="${TARGET}2"
+  EFI_PART="${PART_PREFIX}1"
+  ROOT_PART="${PART_PREFIX}2"
 else
   sgdisk -n 1:0:+1M   -t 1:EF02 -c 1:"BIOS" "$TARGET" || error_exit "Partition BIOS echouee"
   sgdisk -n 2:0:0     -t 2:8300 -c 2:"ROOT" "$TARGET" || error_exit "Partition ROOT echouee"
-  ROOT_PART="${TARGET}2"
+  ROOT_PART="${PART_PREFIX}2"
 fi
 
 sleep 2
@@ -177,6 +184,76 @@ chroot "$MOUNT" update-grub || error_exit "update-grub echoue"
 [ -f "$MOUNT/boot/grub/grub.cfg" ] || error_exit "grub.cfg absent"
 echo "[OK] grub.cfg genere : $(wc -l < "$MOUNT/boot/grub/grub.cfg") lignes"
 
+# --- Copie images Docker ---
+echo "[*] Copie des images Docker depuis l'ISO..."
+DOCKER_SRC="/cdrom/docker-images"
+DOCKER_DST="$MOUNT/opt/planamo/docker"
+
+if [ -d "$DOCKER_SRC" ] && ls "$DOCKER_SRC"/*.tar "$DOCKER_SRC"/*.tar.part-* 2>/dev/null | head -1 | grep -q .; then
+  mkdir -p "$DOCKER_DST"
+  cp -rf "$DOCKER_SRC"/. "$DOCKER_DST/"
+  echo "[OK] Images Docker copiées"
+
+  # Service systemd pour charger les images Docker au premier boot
+  cat > "$MOUNT/etc/systemd/system/planamo-docker-load.service" << 'SVCEOF'
+[Unit]
+Description=PLANAMO Load Docker Images
+After=docker.service
+Requires=docker.service
+ConditionPathExists=/opt/planamo/docker
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/planamo-docker-load
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+SVCEOF
+
+  # Script de chargement avec reassemblage des fichiers splittés
+  cat > "$MOUNT/usr/local/bin/planamo-docker-load" << 'LDEOF'
+#!/bin/bash
+DOCKER_DIR="/opt/planamo/docker"
+FLAG="/opt/planamo/.docker-loaded"
+
+[ -f "$FLAG" ] && { echo "[*] Images already loaded"; exit 0; }
+
+echo "[*] Loading Docker images from $DOCKER_DIR..."
+
+# Reassembler les fichiers splittés
+for base in "$DOCKER_DIR"/*.tar.part-000; do
+  [ -f "$base" ] || continue
+  name="${base%.tar.part-000}"
+  tarfile="${name}.tar"
+  if [ ! -f "$tarfile" ]; then
+    echo "[*] Reassembling $(basename "$name")..."
+    cat "${name}".tar.part-* > "$tarfile"
+    echo "[OK] Reassembled: $(basename "$tarfile")"
+  fi
+done
+
+# Charger tous les .tar
+for tar in "$DOCKER_DIR"/*.tar; do
+  [ -f "$tar" ] || continue
+  echo "[*] Loading: $(basename "$tar")..."
+  docker load -i "$tar" && echo "[OK] Loaded: $(basename "$tar")"
+done
+
+touch "$FLAG"
+echo "[*] All Docker images loaded."
+LDEOF
+  chmod +x "$MOUNT/usr/local/bin/planamo-docker-load"
+
+  # Activer le service
+  chroot "$MOUNT" systemctl enable planamo-docker-load.service 2>/dev/null || true
+  echo "[OK] Service planamo-docker-load activé"
+else
+  echo "[!] Aucune image Docker trouvée dans $DOCKER_SRC — skip"
+fi
+
 # --- Nettoyage ---
 echo "[*] Nettoyage..."
 umount -lf "$MOUNT/dev/pts"  2>/dev/null || true
@@ -193,7 +270,9 @@ echo "======================================="
 
 # Supprimer icone install du bureau live
 rm -f /home/analyste/Desktop/Install-PLANAMO.desktop 2>/dev/null || true
-sudo -u analyste DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u analyste)/bus" \
+# Recharger le bureau en tant qu'analyste
+ANALYSTE_UID=$(id -u analyste 2>/dev/null || echo 1000)
+sudo -u analyste DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${ANALYSTE_UID}/bus" \
   xfdesktop --reload 2>/dev/null || true
 
 whiptail --title "$TITLE" \

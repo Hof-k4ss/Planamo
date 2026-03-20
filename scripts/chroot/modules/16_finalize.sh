@@ -147,7 +147,7 @@ chmod +x /etc/skel/Desktop/PLANAMO-Documentation.desktop
 cat << 'EOF' > /etc/skel/Desktop/Install-PLANAMO.desktop
 [Desktop Entry]
 Name=Install PLANAMO
-Exec=xterm -title "PLANAMO Installer" -fa "Monospace" -fs 11 -geometry 100x35 -e "sudo /usr/local/bin/planamo-install"
+Exec=xterm -title "PLANAMO Installer" -fa "Monospace" -fs 11 -geometry 100x35 -e "sudo TERM=linux /usr/local/bin/planamo-install"
 Icon=system-software-install
 Terminal=false
 Type=Application
@@ -252,5 +252,111 @@ polkit.addRule(function(action, subject) {
     }
 });
 EOF
+
+# Helpers XFCE : terminal par defaut = Terminator, fichiers = Thunar
+mkdir -p /usr/share/xfce4/helpers
+
+cat > /usr/share/xfce4/helpers/custom-TerminalEmulator.desktop << 'EOF'
+[Desktop Entry]
+NoDisplay=true
+Version=0.9.0
+Type=X-XFCE-Helper
+X-XFCE-Binaries=terminator;
+X-XFCE-Category=TerminalEmulator
+X-XFCE-CommandsWithParameter=terminator -x "%s";
+Icon=terminator
+Name=Terminator
+X-XFCE-Commands=terminator;
+EOF
+
+cat > /usr/share/xfce4/helpers/custom-FileManager.desktop << 'EOF'
+[Desktop Entry]
+NoDisplay=true
+Version=0.9.0
+Type=X-XFCE-Helper
+X-XFCE-Binaries=thunar;
+X-XFCE-Category=FileManager
+X-XFCE-CommandsWithParameter=thunar "%s";
+Icon=thunar
+Name=Thunar
+X-XFCE-Commands=thunar;
+EOF
+
+# Appliquer pour tous les utilisateurs via helpers.rc global
+cat > /etc/xdg/xfce4/helpers.rc << 'EOF'
+WebBrowser=custom-WebBrowser
+TerminalEmulator=custom-TerminalEmulator
+FileManager=custom-FileManager
+EOF
+
+# -----------------------
+# Désactiver économiseur d'écran, verrouillage et mise en veille
+# -----------------------
+echo "=== Power & screensaver settings ==="
+
+XFCONF="$HOME_DIR/.config/xfce4/xfconf/xfce-perchannel-xml"
+mkdir -p "$XFCONF"
+
+# Désactiver xfce4-screensaver / verrouillage
+cat > "$XFCONF/xfce4-screensaver.xml" << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfce4-screensaver" version="1.0">
+  <property name="saver" type="empty">
+    <property name="enabled" type="bool" value="false"/>
+    <property name="mode" type="int" value="0"/>
+  </property>
+  <property name="lock" type="empty">
+    <property name="enabled" type="bool" value="false"/>
+    <property name="saver-activation" type="bool" value="false"/>
+  </property>
+</channel>
+EOF
+
+# Désactiver DPMS et mise en veille écran
+cat > "$XFCONF/xfce4-power-manager.xml" << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfce4-power-manager" version="1.0">
+  <property name="xfce4-power-manager" type="empty">
+    <property name="dpms-enabled" type="bool" value="false"/>
+    <property name="blank-on-ac" type="int" value="0"/>
+    <property name="dpms-on-ac-sleep" type="uint" value="0"/>
+    <property name="dpms-on-ac-off" type="uint" value="0"/>
+    <property name="lid-action-on-ac" type="uint" value="0"/>
+    <property name="lid-action-on-battery" type="uint" value="0"/>
+    <property name="sleep-button-action" type="uint" value="0"/>
+    <property name="hibernate-button-action" type="uint" value="0"/>
+  </property>
+</channel>
+EOF
+
+# Désactiver aussi xscreensaver si présent
+if command -v xscreensaver-command >/dev/null 2>&1; then
+  cat > "$HOME_DIR/.xscreensaver" << 'EOF'
+mode: off
+dpmsEnabled: False
+EOF
+  chown "$USER_NAME:$USER_NAME" "$HOME_DIR/.xscreensaver" || true
+fi
+
+chown -R "$USER_NAME:$USER_NAME" "$XFCONF" || true
+
+# -----------------------
+# Fond d'écran LightDM (écran de connexion)
+# -----------------------
+echo "=== LightDM wallpaper ==="
+
+GREETER_CONF="/etc/lightdm/lightdm-gtk-greeter.conf"
+WALL_PATH="/usr/share/planamo/wallpaper_sim.png"
+if [ -f "$WALL_PATH" ]; then
+  cat > "$GREETER_CONF" << EOF
+[greeter]
+background=$WALL_PATH
+theme-name=Adwaita-dark
+icon-theme-name=elementary-xfce-dark
+font-name=Sans 11
+xft-antialias=true
+xft-hintstyle=slight
+EOF
+fi
 
 echo "=== Finalize done ==="

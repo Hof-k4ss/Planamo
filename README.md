@@ -229,11 +229,10 @@ bash build.sh
 * [x] XFCE menu with PLANAMO categories
 * [x] Auto-generated MkDocs documentation
 * [x] Docker offline image support (split >4GB)
+* [x] iOS acquisition support
 * [ ] Tool validation automation
 * [ ] Versioned ISO releases
 * [ ] GitLab CI build pipeline
-* [ ] iOS acquisition support
-* [ ] Network capture live dashboard
 
 ---
 

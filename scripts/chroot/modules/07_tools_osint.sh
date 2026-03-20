@@ -57,6 +57,29 @@ EOF
 
 echo "=== Firefox installed successfully ==="
 
+# Enregistrer Firefox comme navigateur par defaut (exo-open / XFCE)
+update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/local/bin/firefox 100 || true
+update-alternatives --set x-www-browser /usr/local/bin/firefox || true
+
+mkdir -p /usr/share/xfce4/helpers
+cat > /usr/share/xfce4/helpers/custom-WebBrowser.desktop << 'HELPEREOF'
+[Desktop Entry]
+NoDisplay=true
+Version=0.9.0
+Type=X-XFCE-Helper
+X-XFCE-Binaries=firefox;
+X-XFCE-Category=WebBrowser
+X-XFCE-CommandsWithParameter=firefox "%s";
+Icon=firefox
+Name=Firefox
+X-XFCE-Commands=firefox;
+HELPEREOF
+
+mkdir -p /etc/xdg/xfce4
+cat > /etc/xdg/xfce4/helpers.rc << 'HELPEREOF'
+WebBrowser=custom-WebBrowser
+HELPEREOF
+
 # =============================
 # Tor Browser (latest via API)
 # =============================

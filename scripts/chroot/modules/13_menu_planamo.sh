@@ -120,13 +120,8 @@ cat > /etc/xdg/menus/xfce-applications.menu << 'XMLEOF'
     <Include>
       <Category>System</Category>
       <Category>Settings</Category>
+      <Category>TerminalEmulator</Category>
     </Include>
-  </Menu>
-
-  <Menu>
-    <Name>Terminal Emulator</Name>
-    <Directory>xfce-system.directory</Directory>
-    <Include><Category>TerminalEmulator</Category></Include>
   </Menu>
 
 </Menu>
@@ -135,14 +130,72 @@ XMLEOF
 cat > /usr/share/desktop-directories/planamo.directory << 'EOF'
 [Desktop Entry]
 <Name>PLANAMO</Name>
-Icon=folder
+<Icon>security-high</Icon>
 Type=Directory
 EOF
 
-for x in mobile-acq mobile-analysis malware disk memory network osint dev docker; do
-  printf '[Desktop Entry]\n<Name>PLANAMO - %s</Name>\nIcon=folder\nType=Directory\n' "$x" \
-    > "/usr/share/desktop-directories/planamo-$x.directory"
-done
+cat > /usr/share/desktop-directories/planamo-mobile-acq.directory << 'EOF'
+[Desktop Entry]
+<Name>Mobile Acquisition</Name>
+<Icon>phone</Icon>
+Type=Directory
+EOF
+
+cat > /usr/share/desktop-directories/planamo-mobile-analysis.directory << 'EOF'
+[Desktop Entry]
+<Name>Mobile Analysis</Name>
+<Icon>phone</Icon>
+Type=Directory
+EOF
+
+cat > /usr/share/desktop-directories/planamo-malware.directory << 'EOF'
+[Desktop Entry]
+<Name>Malware and RE</Name>
+<Icon>dialog-warning</Icon>
+Type=Directory
+EOF
+
+cat > /usr/share/desktop-directories/planamo-disk.directory << 'EOF'
+[Desktop Entry]
+<Name>Disk and Filesystem</Name>
+<Icon>drive-harddisk</Icon>
+Type=Directory
+EOF
+
+cat > /usr/share/desktop-directories/planamo-memory.directory << 'EOF'
+[Desktop Entry]
+<Name>Memory</Name>
+<Icon>media-flash</Icon>
+Type=Directory
+EOF
+
+cat > /usr/share/desktop-directories/planamo-network.directory << 'EOF'
+[Desktop Entry]
+<Name>Network</Name>
+<Icon>network-wired</Icon>
+Type=Directory
+EOF
+
+cat > /usr/share/desktop-directories/planamo-osint.directory << 'EOF'
+[Desktop Entry]
+<Name>OSINT</Name>
+<Icon>system-search</Icon>
+Type=Directory
+EOF
+
+cat > /usr/share/desktop-directories/planamo-dev.directory << 'EOF'
+[Desktop Entry]
+<Name>Development</Name>
+<Icon>applications-development</Icon>
+Type=Directory
+EOF
+
+cat > /usr/share/desktop-directories/planamo-docker.directory << 'EOF'
+[Desktop Entry]
+<Name>Docker and Services</Name>
+<Icon>application-x-executable</Icon>
+Type=Directory
+EOF
 
 # Configurer xfce4-panel pour utiliser notre menu custom
 mkdir -p /etc/xdg/xfce4/xfconf/xfce-perchannel-xml
