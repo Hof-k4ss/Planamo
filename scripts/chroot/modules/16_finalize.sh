@@ -359,4 +359,120 @@ xft-hintstyle=slight
 EOF
 fi
 
+# -----------------------
+# Config panel XFCE — config réelle générée par XFCE sur le système
+# -----------------------
+echo "=== XFCE panel configuration ==="
+
+XDG_PANEL_DIR="/etc/xdg/xfce4/xfconf/xfce-perchannel-xml"
+XFCONF_PANEL="$HOME_DIR/.config/xfce4/xfconf/xfce-perchannel-xml"
+mkdir -p "$XDG_PANEL_DIR"
+mkdir -p "$XFCONF_PANEL"
+
+cat > /tmp/xfce4-panel.xml << 'PANELEOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfce4-panel" version="1.0">
+  <property name="configver" type="int" value="2"/>
+  <property name="panels" type="array">
+    <value type="int" value="1"/>
+    <value type="int" value="2"/>
+  </property>
+  <property name="dark-mode" type="bool" value="true"/>
+  <property name="panel-1" type="empty">
+    <property name="position" type="string" value="p=6;x=0;y=0"/>
+    <property name="length" type="uint" value="100"/>
+    <property name="position-locked" type="bool" value="true"/>
+    <property name="icon-size" type="uint" value="16"/>
+    <property name="size" type="uint" value="26"/>
+    <property name="plugin-ids" type="array">
+      <value type="int" value="1"/>
+      <value type="int" value="2"/>
+      <value type="int" value="3"/>
+      <value type="int" value="4"/>
+      <value type="int" value="5"/>
+      <value type="int" value="6"/>
+      <value type="int" value="8"/>
+      <value type="int" value="9"/>
+      <value type="int" value="10"/>
+      <value type="int" value="11"/>
+      <value type="int" value="12"/>
+      <value type="int" value="13"/>
+      <value type="int" value="14"/>
+    </property>
+  </property>
+  <property name="panel-2" type="empty">
+    <property name="autohide-behavior" type="uint" value="1"/>
+    <property name="position" type="string" value="p=10;x=0;y=0"/>
+    <property name="length" type="uint" value="1"/>
+    <property name="position-locked" type="bool" value="true"/>
+    <property name="size" type="uint" value="48"/>
+    <property name="plugin-ids" type="array">
+      <value type="int" value="15"/>
+      <value type="int" value="16"/>
+      <value type="int" value="17"/>
+      <value type="int" value="18"/>
+      <value type="int" value="19"/>
+      <value type="int" value="20"/>
+      <value type="int" value="21"/>
+      <value type="int" value="22"/>
+    </property>
+  </property>
+  <property name="plugins" type="empty">
+    <property name="plugin-1" type="string" value="applicationsmenu">
+      <property name="menu-file" type="string" value="/etc/xdg/menus/xfce-applications.menu"/>
+      <property name="custom-menu" type="bool" value="true"/>
+      <property name="show-button-title" type="bool" value="false"/>
+    </property>
+    <property name="plugin-2" type="string" value="tasklist">
+      <property name="grouping" type="uint" value="1"/>
+    </property>
+    <property name="plugin-3" type="string" value="separator">
+      <property name="expand" type="bool" value="true"/>
+      <property name="style" type="uint" value="0"/>
+    </property>
+    <property name="plugin-4" type="string" value="pager"/>
+    <property name="plugin-5" type="string" value="separator">
+      <property name="style" type="uint" value="0"/>
+    </property>
+    <property name="plugin-6" type="string" value="systray">
+      <property name="square-icons" type="bool" value="true"/>
+      <property name="known-legacy-items" type="array">
+        <value type="string" value="ibus panel"/>
+      </property>
+      <property name="known-items" type="array">
+        <value type="string" value="nm-applet"/>
+      </property>
+    </property>
+    <property name="plugin-8" type="string" value="pulseaudio">
+      <property name="enable-keyboard-shortcuts" type="bool" value="true"/>
+      <property name="show-notifications" type="bool" value="true"/>
+    </property>
+    <property name="plugin-9" type="string" value="power-manager-plugin"/>
+    <property name="plugin-10" type="string" value="notification-plugin"/>
+    <property name="plugin-11" type="string" value="separator">
+      <property name="style" type="uint" value="0"/>
+    </property>
+    <property name="plugin-12" type="string" value="clock"/>
+    <property name="plugin-13" type="string" value="separator">
+      <property name="style" type="uint" value="0"/>
+    </property>
+    <property name="plugin-14" type="string" value="actions"/>
+    <property name="plugin-15" type="string" value="showdesktop"/>
+    <property name="plugin-16" type="string" value="separator"/>
+    <property name="plugin-17" type="string" value="launcher"/>
+    <property name="plugin-18" type="string" value="launcher"/>
+    <property name="plugin-19" type="string" value="launcher"/>
+    <property name="plugin-20" type="string" value="launcher"/>
+    <property name="plugin-21" type="string" value="separator"/>
+    <property name="plugin-22" type="string" value="directorymenu">
+      <property name="base-directory" type="string" value="/home/analyste"/>
+    </property>
+  </property>
+</channel>
+PANELEOF
+
+cp /tmp/xfce4-panel.xml "$XDG_PANEL_DIR/xfce4-panel.xml"
+cp /tmp/xfce4-panel.xml "$XFCONF_PANEL/xfce4-panel.xml"
+chown -R "$USER_NAME:$USER_NAME" "$XFCONF_PANEL" || true
+
 echo "=== Finalize done ==="
