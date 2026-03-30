@@ -1,16 +1,24 @@
 #!/bin/bash
+# =============================================================================
+# 14_documentation.sh — Génération de la documentation PLANAMO avec MkDocs
+# =============================================================================
+#
+# Génère le site HTML statique depuis tools_map.conf.
+# Les pages manuelles (ex: remnux.html) doivent être placées dans :
+#   documentation/docs/extra/
+#
+# Elles sont copiées dans le site final et référencées depuis l'index.
+#
+# COMMENT AJOUTER UNE PAGE MANUELLE :
+#   1. Créez documentation/docs/extra/mon-outil.html
+#   2. Elle apparaîtra automatiquement dans la section "Guides" de l'index
+#      et dans la nav de mkdocs.
+#
+# Structure finale :
+#   /opt/planamo/docs/site/index.html   ← point d'entrée (rtfm / planamo-doc)
+#   /opt/planamo/docs/site/extra/       ← pages manuelles (remnux.html, etc.)
+# =============================================================================
 set -e
-
-# Le dossier documentation/ est versionné dans le repo git
-# et copié dans le rootfs par 02_chroot_setup.sh
-# Structure :
-#   /root/documentation/
-#       docs/
-#           extra/        ← pages manuelles (remnux.html, etc.)
-#           themes/       ← générées automatiquement
-#           index.md      ← généré automatiquement
-#       assets/css/custom.css
-#       mkdocs.yml        ← généré automatiquement
 
 MAP_FILE="/root/tools_map.conf"
 DOC_SRC="/root/documentation"
@@ -24,44 +32,50 @@ echo "=== Generating PLANAMO docs from tools_map.conf ==="
 export DEBIAN_FRONTEND=noninteractive
 apt install -y python3-venv python3-pip
 
+# --- Venv MkDocs ---
 mkdir -p /opt/planamo/venvs
 python3 -m venv /opt/planamo/venvs/mkdocs
 /opt/planamo/venvs/mkdocs/bin/pip install --upgrade pip
 /opt/planamo/venvs/mkdocs/bin/pip install mkdocs mkdocs-material
 
-cat << 'EOF' > /usr/local/bin/mkdocs
+# Wrapper global mkdocs
+cat > /usr/local/bin/mkdocs << 'WEOF'
 #!/bin/bash
 exec /opt/planamo/venvs/mkdocs/bin/mkdocs "$@"
-EOF
+WEOF
 chmod +x /usr/local/bin/mkdocs
 
-# Copier la structure documentation/ vers /opt/planamo/docs
+# --- Préparation de l'arborescence docs ---
 mkdir -p "$DOCS/themes"
 mkdir -p "$DOCS/extra"
 mkdir -p "$DOCROOT/assets/css"
 
-# Copier les assets CSS
+# Copie des assets CSS personnalisés depuis le repo
 if [ -d "$DOC_SRC/assets/css" ]; then
-  cp -f "$DOC_SRC/assets/css/"* "$DOCROOT/assets/css/" 2>/dev/null || true
+    cp -f "$DOC_SRC/assets/css/"* "$DOCROOT/assets/css/" 2>/dev/null || true
 fi
 
-# Copier les pages manuelles (extra/)
+# Copie des pages manuelles depuis documentation/docs/extra/
+# (remnux.html et toute autre page HTML manuelle)
 if [ -d "$DOC_SRC/docs/extra" ]; then
-  cp -rf "$DOC_SRC/docs/extra/". "$DOCS/extra/" 2>/dev/null || true
-  echo "[*] Pages manuelles copiées depuis documentation/docs/extra/"
+    cp -rf "$DOC_SRC/docs/extra/". "$DOCS/extra/"
+    echo "[*] Pages manuelles copiées depuis documentation/docs/extra/ :"
+    ls "$DOCS/extra/" 2>/dev/null | sed 's/^/    /'
 fi
 
-# Nettoyage pages générées (pas les manuelles)
+# --- Remise à zéro des pages générées (pas des manuelles) ---
 rm -f "$DOCS/index.md"
 rm -f "$DOCS/themes/"*.md
 rm -f "$MK"
 rm -rf "$SITE"
 
-# CSS personnalisé (embarqué si pas fourni dans le repo)
+# =============================================================================
+# CSS INTÉGRÉ (utilisé si pas de custom.css dans le repo)
+# =============================================================================
 CSS_FILE="$DOCROOT/assets/css/custom.css"
 if [ ! -f "$CSS_FILE" ]; then
-  mkdir -p "$(dirname "$CSS_FILE")"
-  cat > "$CSS_FILE" << 'CSSEOF'
+    mkdir -p "$(dirname "$CSS_FILE")"
+    cat > "$CSS_FILE" << 'CSSEOF'
 :root {
   --md-text-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
   --md-code-font: "SF Mono", "Fira Code", "Roboto Mono", monospace;
@@ -99,136 +113,200 @@ body, .md-typeset {
 CSSEOF
 fi
 
-themes=(
-  "Mobile Acquisition"
-  "Mobile Analysis"
-  "Malware & Reverse Engineering"
-  "Disk & Filesystem"
-  "Memory & Volatile Analysis"
-  "Network & Traffic"
-  "OSINT & Investigation"
-  "Development & Scripting"
-  "Docker & Services"
-)
-
+# =============================================================================
+# FONCTIONS UTILITAIRES
+# =============================================================================
 slugify() {
-  echo "$1" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g'
+    echo "$1" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g'
 }
 
-# Index avec liens directs
-cat > "$DOCS/index.md" << 'MDEOF'
-# PLANAMO — Documentation Outils Forensiques
+theme_icon() {
+    case "$1" in
+        "Mobile Acquisition")            echo "📱" ;;
+        "Mobile Analysis")               echo "🔬" ;;
+        "Malware & Reverse Engineering") echo "🦠" ;;
+        "Disk & Filesystem")             echo "💽" ;;
+        "Memory & Volatile Analysis")    echo "🧠" ;;
+        "Network & Traffic")             echo "🌐" ;;
+        "OSINT & Investigation")         echo "🔍" ;;
+        "Development & Scripting")       echo "⚙️" ;;
+        "Docker & Services")             echo "🐳" ;;
+        *)                               echo "🔧" ;;
+    esac
+}
 
-| Catégorie | Description |
-|-----------|-------------|
-| [📱 Mobile Acquisition](themes/mobile-acquisition.md) | Acquisition forensique Android et iOS |
-| [🔬 Mobile Analysis](themes/mobile-analysis.md) | Analyse d'artefacts mobiles |
-| [🦠 Malware & Reverse Engineering](themes/malware-reverse-engineering.md) | Analyse de malwares et reverse engineering |
-| [💽 Disk & Filesystem](themes/disk-filesystem.md) | Analyse et récupération de disques |
-| [🧠 Memory & Volatile Analysis](themes/memory-volatile-analysis.md) | Analyse de dumps mémoire |
-| [🌐 Network & Traffic](themes/network-traffic.md) | Capture et analyse réseau |
-| [🔍 OSINT & Investigation](themes/osint-investigation.md) | Recherche en sources ouvertes |
-| [⚙️ Development & Scripting](themes/development-scripting.md) | Développement et automatisation |
-| [🐳 Docker & Services](themes/docker-services.md) | Environnements forensiques Docker |
+# =============================================================================
+# GÉNÉRATION DES PAGES PAR THÈME
+# =============================================================================
+themes=(
+    "Mobile Acquisition"
+    "Mobile Analysis"
+    "Malware & Reverse Engineering"
+    "Disk & Filesystem"
+    "Memory & Volatile Analysis"
+    "Network & Traffic"
+    "OSINT & Investigation"
+    "Development & Scripting"
+    "Docker & Services"
+)
 
----
+nav_theme_lines=()
 
-## Guides
-
-- [🦠 Guide REMnux](extra/remnux.html) — Utilisation du conteneur REMnux pour l'analyse de malwares
-
----
-*Documentation générée depuis tools_map.conf — Pages manuelles dans documentation/docs/extra/*
-MDEOF
-
-nav_lines=()
 for t in "${themes[@]}"; do
-  s="$(slugify "$t")"
-  page="$DOCS/themes/$s.md"
-  case "$t" in
-    "Mobile Acquisition")            icon="📱" ;;
-    "Mobile Analysis")               icon="🔬" ;;
-    "Malware & Reverse Engineering") icon="🦠" ;;
-    "Disk & Filesystem")             icon="💽" ;;
-    "Memory & Volatile Analysis")    icon="🧠" ;;
-    "Network & Traffic")             icon="🌐" ;;
-    "OSINT & Investigation")         icon="🔍" ;;
-    "Development & Scripting")       icon="⚙️" ;;
-    "Docker & Services")             icon="🐳" ;;
-    *)                               icon="🔧" ;;
-  esac
-  printf "# %s %s\n\n" "$icon" "$t" > "$page"
-  nav_lines+=("  - \"$icon $t\": \"themes/$s.md\"")
+    s="$(slugify "$t")"
+    icon="$(theme_icon "$t")"
+    page="$DOCS/themes/$s.md"
+    printf "# %s %s\n\n" "$icon" "$t" > "$page"
+    nav_theme_lines+=("  - \"$icon $t\": \"themes/$s.md\"")
 done
 
+# Remplissage des pages thème depuis tools_map.conf
 while IFS='|' read -r name cmd themes_list type description; do
-  [[ -z "$name" || "$name" =~ ^# ]] && continue
-  name="$(echo "$name" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-  cmd="$(echo "$cmd" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-  type="$(echo "$type" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-  description="$(echo "$description" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    # Ignorer les commentaires et lignes vides
+    [[ -z "$name" || "$name" =~ ^# ]] && continue
 
-  IFS=',' read -ra tarr <<< "$themes_list"
-  for raw in "${tarr[@]}"; do
-    theme="${raw#"${raw%%[![:space:]]*}"}"; theme="${theme%"${theme##*[![:space:]]}"}"
-    s="$(slugify "$theme")"
-    page="$DOCS/themes/$s.md"
-    [[ -f "$page" ]] || continue
+    # Nettoyage des espaces autour des champs
+    name="$(echo "$name" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    cmd="$(echo "$cmd" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    type="$(echo "$type" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    description="$(echo "$description" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
 
-    {
-      echo "## $name"
-      echo ""
-      echo "$description"
-      echo ""
-      echo "| Champ | Valeur |"
-      echo "|-------|--------|"
-      echo "| **Commande** | \`$cmd\` |"
-      echo "| **Type** | $type |"
-      echo ""
-      echo "---"
-      echo ""
-    } >> "$page"
-  done
+    # Un outil peut appartenir à plusieurs thèmes (séparés par virgule)
+    IFS=',' read -ra tarr <<< "$themes_list"
+    for raw in "${tarr[@]}"; do
+        theme="$(echo "$raw" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+        s="$(slugify "$theme")"
+        page="$DOCS/themes/$s.md"
+        [[ -f "$page" ]] || continue
+
+        {
+            echo "## $name"
+            echo ""
+            echo "$description"
+            echo ""
+            echo "| Champ | Valeur |"
+            echo "|-------|--------|"
+            echo "| **Commande** | \`$cmd\` |"
+            echo "| **Type** | $type |"
+            echo ""
+            echo "---"
+            echo ""
+        } >> "$page"
+    done
 done < "$MAP_FILE"
 
-# Construire le mkdocs.yml
-{
-  echo "site_name: PLANAMO"
-  echo "site_description: Mobile Forensics & Incident Response Platform"
-  echo "use_directory_urls: false"
-  echo "theme:"
-  echo "  name: material"
-  echo "  palette:"
-  echo "    scheme: slate"
-  echo "    primary: custom"
-  echo "    accent: custom"
-  echo "  font:"
-  echo "    text: false"
-  echo "    code: false"
-  echo "  features:"
-  echo "    - navigation.instant"
-  echo "    - navigation.tabs"
-  echo "    - navigation.expand"
-  echo "    - toc.integrate"
-  echo "extra_css:"
-  echo "  - ../assets/css/custom.css"
-  echo "docs_dir: docs"
-  echo "nav:"
-  echo "  - \"Accueil\": \"index.md\""
-  for line in "${nav_lines[@]}"; do
-    echo "$line"
-  done
-  if [ -d "$DOCS/extra" ] && ls "$DOCS/extra/"*.html >/dev/null 2>&1; then
-    echo "  - \"Guides\":"
+# =============================================================================
+# DÉTECTION DES PAGES MANUELLES (extra/*.html)
+# Chaque fichier HTML dans docs/extra/ devient un "Guide" dans la nav.
+# =============================================================================
+nav_guide_lines=()
+
+if [ -d "$DOCS/extra" ]; then
     for f in "$DOCS/extra/"*.html; do
-      base=$(basename "$f" .html)
-      label=$(echo "$base" | sed 's/-/ /g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2); print}')
-      echo "    - \"$label\": \"extra/$(basename "$f")\""
+        [ -f "$f" ] || continue
+        base="$(basename "$f" .html)"
+        # Génère un label lisible depuis le nom de fichier (remnux → Remnux)
+        label="$(echo "$base" | sed 's/-/ /g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2); print}')"
+        nav_guide_lines+=("    - \"$label\": \"extra/$(basename "$f")\"")
+        echo "[*] Guide détecté : $label (extra/$(basename "$f"))"
     done
-  fi
-} > "$MK" 
+fi
+
+# =============================================================================
+# GÉNÉRATION DE L'INDEX
+# Inclut les thèmes ET les guides (pages manuelles comme remnux.html)
+# =============================================================================
+{
+    echo "# PLANAMO — Documentation Outils Forensiques"
+    echo ""
+    echo "| Catégorie | Description |"
+    echo "|-----------|-------------|"
+    for t in "${themes[@]}"; do
+        s="$(slugify "$t")"
+        icon="$(theme_icon "$t")"
+        echo "| [$icon $t](themes/$s.md) | — |"
+    done
+    echo ""
+    echo "---"
+    echo ""
+
+    # Section Guides uniquement si des pages manuelles existent
+    if [ ${#nav_guide_lines[@]} -gt 0 ]; then
+        echo "## Guides"
+        echo ""
+        for f in "$DOCS/extra/"*.html; do
+            [ -f "$f" ] || continue
+            base="$(basename "$f" .html)"
+            label="$(echo "$base" | sed 's/-/ /g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2); print}')"
+            echo "- [$label](extra/$(basename "$f"))"
+        done
+        echo ""
+        echo "---"
+        echo ""
+    fi
+
+    echo "*Documentation générée depuis tools_map.conf — Pages manuelles dans documentation/docs/extra/*"
+} > "$DOCS/index.md"
+
+# =============================================================================
+# GÉNÉRATION DE mkdocs.yml
+# =============================================================================
+{
+    echo "site_name: PLANAMO"
+    echo "site_description: Mobile Forensics & Incident Response Platform"
+    echo "use_directory_urls: false"
+    echo "theme:"
+    echo "  name: material"
+    echo "  palette:"
+    echo "    scheme: slate"
+    echo "    primary: custom"
+    echo "    accent: custom"
+    echo "  font:"
+    echo "    text: false"
+    echo "    code: false"
+    echo "  features:"
+    echo "    - navigation.instant"
+    echo "    - navigation.tabs"
+    echo "    - navigation.expand"
+    echo "    - toc.integrate"
+    echo "extra_css:"
+    echo "  - ../assets/css/custom.css"
+    echo "docs_dir: docs"
+    echo "nav:"
+    echo "  - \"Accueil\": \"index.md\""
+
+    # Thèmes
+    for line in "${nav_theme_lines[@]}"; do
+        echo "$line"
+    done
+
+    # Guides (pages manuelles) — section séparée dans la nav
+    if [ ${#nav_guide_lines[@]} -gt 0 ]; then
+        echo "  - \"Guides\":"
+        for line in "${nav_guide_lines[@]}"; do
+            echo "$line"
+        done
+    fi
+} > "$MK"
+
+# =============================================================================
+# BUILD MKDOCS
+# =============================================================================
+echo "[*] Building MkDocs site..."
 cd "$DOCROOT"
 mkdocs build -d "$SITE"
+
+# =============================================================================
+# COPIE POST-BUILD des pages manuelles HTML
+# MkDocs ne traite pas les fichiers .html dans docs/ directement —
+# on les copie manuellement dans le site généré pour garantir leur présence.
+# =============================================================================
+if [ -d "$DOCS/extra" ]; then
+    mkdir -p "$SITE/extra"
+    cp -f "$DOCS/extra/"*.html "$SITE/extra/" 2>/dev/null || true
+    echo "[*] Pages manuelles copiées dans $SITE/extra/ :"
+    ls "$SITE/extra/" 2>/dev/null | sed 's/^/    /'
+fi
 
 echo "=== HTML documentation built: $SITE/index.html ==="
 apt clean
