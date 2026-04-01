@@ -224,33 +224,35 @@ fi
 
 # =============================================================================
 # BULK_EXTRACTOR — extraction d'artefacts forensiques depuis images disque
-# Compilé depuis les sources (pas de binaire précompilé disponible)
+# Utilise autoconf (bootstrap.sh + configure + make), PAS cmake
 # =============================================================================
-echo "=== Installing bulk_extractor (git clone + build) ==="
+echo "=== Installing bulk_extractor (git clone + autoconf build) ==="
 
 apt install -y \
-    build-essential cmake git \
+    build-essential autoconf automake libtool flex \
     libssl-dev libewf-dev libexpat1-dev \
     libsqlite3-dev libbz2-dev zlib1g-dev \
-    libpcap-dev
+    libpcap-dev \
+    libre2-dev
 
 BULK_DST="/opt/planamo/tools/bulk_extractor"
 
-git clone --depth=1 https://github.com/simsong/bulk_extractor.git "$BULK_DST"
+# --recurse-submodules dès le clone (évite un git submodule update séparé)
+git clone --depth=1 --recurse-submodules \
+    https://github.com/simsong/bulk_extractor.git "$BULK_DST"
 
 cd "$BULK_DST"
 
-# Initialiser les sous-modules (requis par bulk_extractor)
-git submodule update --init --recursive
+# bootstrap.sh génère le script configure à partir de configure.ac
+bash bootstrap.sh
 
-mkdir -p build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
+# Configure et compile (C++17 requis, -j$(nproc) parallélise)
+./configure
 make -j$(nproc)
 make install
 
 # Vérification
-which bulk_extractor && bulk_extractor --version | head -1 || \
-    { echo "ERROR: bulk_extractor install failed"; exit 1; }
+bulk_extractor --version | head -1 || { echo "ERROR: bulk_extractor install failed"; exit 1; }
 
 echo "[OK] bulk_extractor installed"
 
