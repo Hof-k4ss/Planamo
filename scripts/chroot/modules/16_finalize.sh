@@ -373,4 +373,48 @@ xft-hintstyle=slight
 EOF
 fi
 
+echo "=== Final cleanup for ISO ==="
+
+export DEBIAN_FRONTEND=noninteractive
+
+# Nettoyage APT
+apt-get autoremove -y || true
+apt-get autoclean -y || true
+apt-get clean || true
+rm -rf /var/lib/apt/lists/* 2>/dev/null || true
+
+# Nettoyage caches temporaires
+rm -rf /tmp/* /tmp/.[!.]* /tmp/..?* 2>/dev/null || true
+rm -rf /var/tmp/* /var/tmp/.[!.]* /var/tmp/..?* 2>/dev/null || true
+
+# Nettoyage journaux
+find /var/log -type f -exec truncate -s 0 {} \; 2>/dev/null || true
+rm -f /var/log/*.gz /var/log/*.[0-9] 2>/dev/null || true
+rm -rf /var/log/journal/* 2>/dev/null || true
+
+# Nettoyage historiques shell
+rm -f /root/.bash_history 2>/dev/null || true
+rm -f /home/analyste/.bash_history 2>/dev/null || true
+
+# Nettoyage miniatures / caches utilisateur
+rm -rf /home/analyste/.cache/thumbnails/* 2>/dev/null || true
+rm -rf /home/analyste/.cache/mime/* 2>/dev/null || true
+rm -rf /home/analyste/.cache/xfce4/* 2>/dev/null || true
+
+# Nettoyage cache pip éventuel
+rm -rf /root/.cache/pip 2>/dev/null || true
+rm -rf /home/analyste/.cache/pip 2>/dev/null || true
+
+# Nettoyage machine-id pour cloner une ISO propre
+truncate -s 0 /etc/machine-id 2>/dev/null || true
+rm -f /var/lib/dbus/machine-id 2>/dev/null || true
+ln -sf /etc/machine-id /var/lib/dbus/machine-id 2>/dev/null || true
+
+# Nettoyage fichiers runtime résiduels
+rm -rf /run/* 2>/dev/null || true
+
+# Permissions utilisateur
+chown -R analyste:analyste /home/analyste 2>/dev/null || true
+
+sync
 echo "=== Finalize done ==="

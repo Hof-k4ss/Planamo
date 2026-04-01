@@ -2,9 +2,6 @@
 # =============================================================================
 # 09_tools_nonapt.sh — Outils non disponibles via apt
 # =============================================================================
-# aleapp et ileapp sont clonés depuis GitHub directement dans le chroot,
-# ce qui garantit d'avoir la dernière version à chaque build.
-# =============================================================================
 set -ex
 
 echo "=== Installing Non-APT Tools ==="
@@ -17,6 +14,7 @@ apt install -y \
     git \
     python3-venv \
     python3-pip \
+    python3-tk \
     ca-certificates \
     fuse3 \
     default-jdk-headless
@@ -43,10 +41,9 @@ wget -O jadx.zip "$JADX_URL"
 unzip -q -o jadx.zip
 rm -f jadx.zip
 
-# Le zip peut ne pas préserver le bit exécutable — on force sur tout bin/
 chmod +x "$JADX_DIR/bin/"*
 
-[ -f "$JADX_DIR/bin/jadx" ]     || { echo "ERROR: jadx binary not found";    exit 1; }
+[ -f "$JADX_DIR/bin/jadx" ]     || { echo "ERROR: jadx binary not found"; exit 1; }
 [ -f "$JADX_DIR/bin/jadx-gui" ] || { echo "ERROR: jadx-gui binary not found"; exit 1; }
 
 ln -sf "$JADX_DIR/bin/jadx"     /usr/local/bin/jadx
@@ -125,42 +122,46 @@ ln -sf /opt/planamo/wrappers/volatility3 /usr/local/bin/volatility3
 echo "[OK] Volatility3 installed"
 
 # =============================================================================
-# ALEAPP — Android Logs Events And Protobuf Parser
-# Cloné depuis GitHub pour avoir toujours la dernière version
+# ALEAPP
 # =============================================================================
 echo "=== Installing ALEAPP (git clone) ==="
 
 ALEAPP_DST="/opt/planamo/tools/aleapp"
+ALEAPP_VENV="/opt/planamo/venvs/aleapp"
 
-# Cloner la dernière version depuis le repo officiel
+rm -rf "$ALEAPP_DST"
 git clone --depth=1 https://github.com/abrignoni/ALEAPP.git "$ALEAPP_DST"
 
-# Venv dédié
-python3 -m venv /opt/planamo/venvs/aleapp
-/opt/planamo/venvs/aleapp/bin/pip install --upgrade pip
+python3 -m venv "$ALEAPP_VENV"
+"$ALEAPP_VENV/bin/pip" install --upgrade pip
 
-# Installer les dépendances
 if [ -f "$ALEAPP_DST/requirements.txt" ]; then
-    /opt/planamo/venvs/aleapp/bin/pip install -r "$ALEAPP_DST/requirements.txt"
+    "$ALEAPP_VENV/bin/pip" install -r "$ALEAPP_DST/requirements.txt"
 else
-    /opt/planamo/venvs/aleapp/bin/pip install \
+    "$ALEAPP_VENV/bin/pip" install \
         PyQt5 python-dateutil jinja2 pillow xlsxwriter simplekml six chardet
 fi
 
-# Wrapper CLI
+# FIX GUI : certains chemins sont résolus depuis le venv
+if [ -d "$ALEAPP_DST/assets" ]; then
+    rm -rf "$ALEAPP_VENV/assets"
+    ln -s "$ALEAPP_DST/assets" "$ALEAPP_VENV/assets"
+fi
+
 cat > /opt/planamo/wrappers/aleapp << EOF
 #!/bin/bash
-source /opt/planamo/venvs/aleapp/bin/activate
+cd "$ALEAPP_DST"
+source "$ALEAPP_VENV/bin/activate"
 exec python3 "$ALEAPP_DST/aleapp.py" "\$@"
 EOF
 chmod +x /opt/planamo/wrappers/aleapp
 ln -sf /opt/planamo/wrappers/aleapp /usr/local/bin/aleapp
 
-# Wrapper GUI (si disponible)
 if [ -f "$ALEAPP_DST/aleappGUI.py" ]; then
     cat > /opt/planamo/wrappers/aleapp-gui << EOF
 #!/bin/bash
-source /opt/planamo/venvs/aleapp/bin/activate
+cd "$ALEAPP_DST"
+source "$ALEAPP_VENV/bin/activate"
 exec python3 "$ALEAPP_DST/aleappGUI.py" "\$@"
 EOF
     chmod +x /opt/planamo/wrappers/aleapp-gui
@@ -171,40 +172,47 @@ else
 fi
 
 # =============================================================================
-# iLEAPP — iOS Logs Events And Protobuf Parser
-# Cloné depuis GitHub pour avoir toujours la dernière version
+# iLEAPP
 # =============================================================================
 echo "=== Installing iLEAPP (git clone) ==="
 
 ILEAPP_DST="/opt/planamo/tools/ileapp"
+ILEAPP_VENV="/opt/planamo/venvs/ileapp"
 
+rm -rf "$ILEAPP_DST"
 git clone --depth=1 https://github.com/abrignoni/iLEAPP.git "$ILEAPP_DST"
 
-python3 -m venv /opt/planamo/venvs/ileapp
-/opt/planamo/venvs/ileapp/bin/pip install --upgrade pip
+python3 -m venv "$ILEAPP_VENV"
+"$ILEAPP_VENV/bin/pip" install --upgrade pip
 
 if [ -f "$ILEAPP_DST/requirements.txt" ]; then
-    /opt/planamo/venvs/ileapp/bin/pip install -r "$ILEAPP_DST/requirements.txt"
+    "$ILEAPP_VENV/bin/pip" install -r "$ILEAPP_DST/requirements.txt"
 else
-    /opt/planamo/venvs/ileapp/bin/pip install \
+    "$ILEAPP_VENV/bin/pip" install \
         PyQt5 python-dateutil jinja2 pillow xlsxwriter simplekml six chardet \
         blackboxprotobuf
 fi
 
-# Wrapper CLI
+# FIX GUI : certains chemins sont résolus depuis le venv
+if [ -d "$ILEAPP_DST/assets" ]; then
+    rm -rf "$ILEAPP_VENV/assets"
+    ln -s "$ILEAPP_DST/assets" "$ILEAPP_VENV/assets"
+fi
+
 cat > /opt/planamo/wrappers/ileapp << EOF
 #!/bin/bash
-source /opt/planamo/venvs/ileapp/bin/activate
+cd "$ILEAPP_DST"
+source "$ILEAPP_VENV/bin/activate"
 exec python3 "$ILEAPP_DST/ileapp.py" "\$@"
 EOF
 chmod +x /opt/planamo/wrappers/ileapp
 ln -sf /opt/planamo/wrappers/ileapp /usr/local/bin/ileapp
 
-# Wrapper GUI (si disponible)
 if [ -f "$ILEAPP_DST/ileappGUI.py" ]; then
     cat > /opt/planamo/wrappers/ileapp-gui << EOF
 #!/bin/bash
-source /opt/planamo/venvs/ileapp/bin/activate
+cd "$ILEAPP_DST"
+source "$ILEAPP_VENV/bin/activate"
 exec python3 "$ILEAPP_DST/ileappGUI.py" "\$@"
 EOF
     chmod +x /opt/planamo/wrappers/ileapp-gui
@@ -213,5 +221,37 @@ EOF
 else
     echo "[OK] iLEAPP installed (no GUI found)"
 fi
+
+# =============================================================================
+# BULK_EXTRACTOR — extraction d'artefacts forensiques depuis images disque
+# Compilé depuis les sources (pas de binaire précompilé disponible)
+# =============================================================================
+echo "=== Installing bulk_extractor (git clone + build) ==="
+
+apt install -y \
+    build-essential cmake git \
+    libssl-dev libewf-dev libexpat1-dev \
+    libsqlite3-dev libbz2-dev zlib1g-dev \
+    libpcap-dev
+
+BULK_DST="/opt/planamo/tools/bulk_extractor"
+
+git clone --depth=1 https://github.com/simsong/bulk_extractor.git "$BULK_DST"
+
+cd "$BULK_DST"
+
+# Initialiser les sous-modules (requis par bulk_extractor)
+git submodule update --init --recursive
+
+mkdir -p build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
+make -j$(nproc)
+make install
+
+# Vérification
+which bulk_extractor && bulk_extractor --version | head -1 || \
+    { echo "ERROR: bulk_extractor install failed"; exit 1; }
+
+echo "[OK] bulk_extractor installed"
 
 apt clean
