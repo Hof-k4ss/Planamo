@@ -14,7 +14,8 @@ cp -r config/grub-theme/* "$ISODIR/boot/grub/themes/planamo/"
 cp config/grub.cfg "$ISODIR/boot/grub/grub.cfg"
 
 rm -f "$ISODIR/casper/filesystem.squashfs"
-mksquashfs "$ROOTFS" "$ISODIR/casper/filesystem.squashfs" -noappend -comp zstd -b 1048576 -Xcompression-level 19 -e boot
+sudo mksquashfs "$ROOTFS" "$ISODIR/casper/filesystem.squashfs" -noappend -comp zstd -b 1048576 -Xcompression-level 19 -e boot
+sudo chown "$(id -u):$(id -g)" "$ISODIR/casper/filesystem.squashfs"
 
 echo "Création du manifest..."
 sudo chroot "$ROOTFS" dpkg-query -W --showformat='${Package} ${Version}\n' > "$ISODIR/casper/filesystem.manifest"
@@ -34,8 +35,9 @@ INITRD=$(ls "$ROOTFS"/boot/initrd.img-* 2>/dev/null | sort -V | tail -1)
 echo "Kernel  : $(basename "$VMLINUZ")"
 echo "Initrd  : $(basename "$INITRD")"
 
-cp "$VMLINUZ" "$ISODIR/casper/vmlinuz"
-cp "$INITRD"  "$ISODIR/casper/initrd"
+sudo cp "$VMLINUZ" "$ISODIR/casper/vmlinuz"
+sudo cp "$INITRD"  "$ISODIR/casper/initrd"
+sudo chown "$(id -u):$(id -g)" "$ISODIR/casper/vmlinuz" "$ISODIR/casper/initrd"
 
 
 echo "SquashFS créé."

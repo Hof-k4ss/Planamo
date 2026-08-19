@@ -6,19 +6,25 @@ echo "=== Base system installation ==="
 
 # Dépôts Ubuntu
 cat <<EOF > /etc/apt/sources.list
-deb http://fr.archive.ubuntu.com/ubuntu noble main restricted universe multiverse
-deb http://fr.archive.ubuntu.com/ubuntu noble-updates main restricted universe multiverse
-deb http://fr.archive.ubuntu.com/ubuntu noble-security main restricted universe multiverse
+deb http://fr.archive.ubuntu.com/ubuntu resolute main restricted universe multiverse
+deb http://fr.archive.ubuntu.com/ubuntu resolute-updates main restricted universe multiverse
+deb http://fr.archive.ubuntu.com/ubuntu resolute-security main restricted universe multiverse
 EOF
 
 echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 apt update
+
+# NOTE (Ubuntu 26.04 "Resolute Raccoon") : dracut est désormais le générateur
+# d'initramfs par défaut. initramfs-tools reste packagé pour compatibilité et
+# est installé explicitement ci-dessous car casper (démarrage live) s'appuie
+# encore sur ses hooks. À surveiller lors des futures mises à jour de casper.
 
 apt install -y \
     ubuntu-standard \
     sudo \
     systemd-sysv \
     casper \
+    initramfs-tools \
     linux-image-generic \
     linux-headers-generic \
     dbus-x11 \

@@ -168,7 +168,13 @@ mount -t sysfs sysfs  "$MOUNT/sys"  || error_exit "mount /sys echoue"
 $EFI_MODE && mount -t efivarfs efivarfs "$MOUNT/sys/firmware/efi/efivars" 2>/dev/null || true
 
 echo "[*] Regeneration initramfs..."
-chroot "$MOUNT" update-initramfs -u -k all || echo "[!] update-initramfs warning"
+# Ubuntu 26.04 : dracut est le generateur par defaut, update-initramfs
+# n'est plus qu'un shim qui ne fait rien. On detecte l'outil disponible.
+if chroot "$MOUNT" command -v dracut >/dev/null 2>&1; then
+  chroot "$MOUNT" dracut --force --regenerate-all || echo "[!] dracut warning"
+else
+  chroot "$MOUNT" update-initramfs -u -k all || echo "[!] update-initramfs warning"
+fi
 
 if $EFI_MODE; then
   chroot "$MOUNT" grub-install \
