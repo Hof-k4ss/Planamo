@@ -28,12 +28,13 @@ apt install -y \
     linux-image-generic \
     linux-headers-generic \
     dbus-x11 \
-    policykit-1 \
+    polkitd \
+    pkexec \
     network-manager \
     network-manager-gnome \
     iproute2 \
     ethtool \
-    wireless-tools \
+    iw \
     wpasupplicant \
     linux-firmware \
     ca-certificates \
@@ -83,8 +84,20 @@ EOF
 # Locale English
 # -----------------------
 apt install -y locales
+
+sed -i 's/^# *en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
+
 locale-gen en_US.UTF-8
-update-locale LANG=en_US.UTF-8
+
+cat > /etc/default/locale <<'EOF'
+LANG=en_US.UTF-8
+LANGUAGE=en_US:en
+LC_ALL=en_US.UTF-8
+EOF
+
+export LANG=en_US.UTF-8
+export LANGUAGE=en_US:en
+export LC_ALL=en_US.UTF-8
 
 # Remove ifupdown if present
 apt purge -y ifupdown || true
