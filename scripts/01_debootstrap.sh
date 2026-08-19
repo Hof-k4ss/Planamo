@@ -14,7 +14,7 @@ sudo bash -c 'echo "Acquire::ForceIPv4 \"true\";" > /etc/apt/apt.conf.d/99force-
 sudo debootstrap \
   --arch=amd64 \
   --variant=minbase \
-  noble \
+  resolute \
   "$ROOTFS" \
   http://fr.archive.ubuntu.com/ubuntu/
 

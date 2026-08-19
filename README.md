@@ -1,7 +1,7 @@
 # 🛡 PLANAMO (Plateforme d'Analyse Mobile)
 ### Mobile Forensics & Incident Response Live Distribution
 
-![Ubuntu](https://img.shields.io/badge/Base-Ubuntu%2024.04%20\(Noble\)-E95420?logo=ubuntu)
+![Ubuntu](https://img.shields.io/badge/Base-Ubuntu%2026.04%20\(Resolute%20Raccoon\)-E95420?logo=ubuntu)
 ![Build](https://img.shields.io/badge/Build-debootstrap-blue)
 ![Desktop](https://img.shields.io/badge/Desktop-Xfce-lightgrey)
 ![License](https://img.shields.io/badge/License-Private-red)
@@ -38,7 +38,7 @@ PLANAMO is modular and deterministic.
 
 ```bash
 scripts/docker/01_fetch_images.sh     # Pull Docker forensic images
-01_debootstrap.sh                     # Bootstrap minimal Ubuntu Noble rootfs
+01_debootstrap.sh                     # Bootstrap minimal Ubuntu Resolute (26.04) rootfs
 02_chroot_setup.sh                    # Mount pseudo-fs, inject modules, run main.sh
 scripts/chroot/main.sh                # Execute chroot modules 01 → 16
 03_make_squashfs.sh                   # Build SquashFS (zstd) + extract kernel/initrd
@@ -172,6 +172,12 @@ sudo apt install debootstrap squashfs-tools xorriso \
   grub-pc-bin grub-efi-amd64-bin mtools docker.io git
 ```
 
+> ⚠️ **Ubuntu 26.04 (Resolute Raccoon)**: `debootstrap` needs to know the
+> `resolute` suite script. If your host's `debootstrap` predates the 26.04
+> release, update it first (`sudo apt update && sudo apt install --only-upgrade debootstrap`)
+> or the bootstrap step in `scripts/01_debootstrap.sh` will fail with
+> "invalid suite".
+
 ---
 
 ## 🔨 Build ISO
@@ -182,7 +188,7 @@ bash build.sh
 
 **Build steps:**
 1. Pull Docker forensic images
-2. Bootstrap minimal Ubuntu Noble rootfs
+2. Bootstrap minimal Ubuntu Resolute (26.04) rootfs
 3. Run 16 chroot modules (toolchain, menu, docs, installer, finalize)
 4. Generate SquashFS with zstd compression
 5. Assemble bootable ISO

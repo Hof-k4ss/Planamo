@@ -29,7 +29,7 @@ sudo cp -r outils "$ROOTFS/root/"
 sudo mkdir -p "$ROOTFS/root/documentation"
 sudo cp -r documentation/. "$ROOTFS/root/documentation/"
 # Création des thèmes
-cp scripts/chroot/tools_map.conf "$ROOTFS/root/tools_map.conf"
+sudo cp scripts/chroot/tools_map.conf "$ROOTFS/root/tools_map.conf"
 echo "Entrée dans le chroot..."
 sudo chroot "$ROOTFS" /bin/bash /root/main.sh
 # Nettoyage

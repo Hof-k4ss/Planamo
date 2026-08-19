@@ -20,9 +20,21 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
 
 chmod a+r /etc/apt/keyrings/docker.gpg
 
+# Détection dynamique du codename Ubuntu (au lieu d'un "noble" en dur) :
+# le dépôt Docker officiel met parfois un peu de temps à publier la suite
+# correspondant à une release Ubuntu tout juste sortie. On teste la suite
+# courante, et on retombe sur la dernière LTS connue de Docker si absente.
+DOCKER_CODENAME="$(. /etc/os-release && echo "$VERSION_CODENAME")"
+
+if ! curl -fsSL "https://download.docker.com/linux/ubuntu/dists/${DOCKER_CODENAME}/Release" \
+      -o /dev/null 2>/dev/null; then
+  echo "[!] Pas de dépôt Docker pour '${DOCKER_CODENAME}', repli sur 'noble'"
+  DOCKER_CODENAME="noble"
+fi
+
 echo \
   "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] \
-  https://download.docker.com/linux/ubuntu noble stable" \
+  https://download.docker.com/linux/ubuntu ${DOCKER_CODENAME} stable" \
   > /etc/apt/sources.list.d/docker.list
 
 apt update
