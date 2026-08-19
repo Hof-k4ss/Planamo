@@ -1,0 +1,38 @@
+/* PLANAMO Documentation Theme */
+/* Police Apple */
+:root {
+  --md-text-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --md-code-font: "SF Mono", "Fira Code", "Roboto Mono", monospace;
+}
+body, .md-typeset {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+}
+/* Vert Android */
+:root {
+  --md-primary-fg-color: #3DDC84;
+  --md-primary-fg-color--light: #3DDC84;
+  --md-primary-fg-color--dark: #2bb56a;
+  --md-accent-fg-color: #3DDC84;
+}
+.md-header { background-color: #1a1a1a; border-bottom: 2px solid #3DDC84; }
+.md-header__title { font-weight: 600; letter-spacing: -0.02em; color: #3DDC84; }
+.md-tabs { background-color: #111111; }
+.md-tabs__link--active, .md-tabs__link:hover { color: #3DDC84 !important; }
+/* Fond sombre Apple */
+[data-md-color-scheme="slate"] {
+  --md-default-bg-color: #0d0d0d;
+  --md-default-fg-color: #f5f5f7;
+  --md-default-fg-color--light: #a1a1a6;
+  --md-code-bg-color: #1c1c1e;
+}
+.md-typeset h1 { font-weight: 700; letter-spacing: -0.03em; color: #3DDC84; font-size: 2em; }
+.md-typeset h2 { font-weight: 600; letter-spacing: -0.02em; color: #f5f5f7; border-bottom: 1px solid #3DDC84; padding-bottom: 0.3em; }
+.md-typeset table { border-radius: 10px; overflow: hidden; border: 1px solid #2c2c2e; }
+.md-typeset table th { background-color: #1c1c1e; color: #3DDC84; font-weight: 600; }
+.md-typeset table tr:nth-child(even) { background-color: #141414; }
+.md-typeset code { background-color: #1c1c1e; color: #3DDC84; border-radius: 4px; padding: 0.1em 0.4em; font-size: 0.85em; }
+.md-nav__title { color: #3DDC84; font-weight: 600; }
+.md-nav__link--active { color: #3DDC84 !important; }
+.md-typeset hr { border-color: #2c2c2e; }

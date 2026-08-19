@@ -1,0 +1,14 @@
+# Planamo GRUB Theme
+
+desktop-image: "background.png"
+
++ boot_menu {
+    left = 50%-200
+    top = 45%
+    width = 400
+    height = 200
+
+    item_font = "DejaVu Sans 18"
+    item_color = "#FFFFFF"
+    selected_item_color = "#00FFAA"
+}
