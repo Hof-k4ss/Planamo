@@ -11,6 +11,18 @@ cleanup() {
     sudo umount -lf "$ROOTFS/etc/resolv.conf" 2>/dev/null || true
 }
 trap cleanup EXIT
+
+echo "Préparation des points de montage..."
+
+sudo mkdir -p \
+    "$ROOTFS/dev" \
+    "$ROOTFS/dev/pts" \
+    "$ROOTFS/proc" \
+    "$ROOTFS/sys"
+
+sudo rm -f "$ROOTFS/etc/resolv.conf"
+sudo touch "$ROOTFS/etc/resolv.conf"
+
 echo "Mount des pseudo-filesystems..."
 sudo mount --bind /dev "$ROOTFS/dev"
 sudo mount --bind /dev/pts "$ROOTFS/dev/pts"
