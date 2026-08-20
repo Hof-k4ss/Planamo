@@ -20,7 +20,7 @@ apt install -y \
     wget \
     libimobiledevice-utils \
     usbmuxd \
-    libimobiledevice6 \
+    libimobiledevice-1.0-6 \
     libplist-utils \
     autopsy \
     hexedit \

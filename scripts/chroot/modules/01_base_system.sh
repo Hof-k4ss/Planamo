@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 export DEBIAN_FRONTEND=noninteractive
+unset LANG LANGUAGE LC_ALL LC_CTYPE LC_MESSAGES
+export DEBIAN_FRONTEND=noninteractive
 
 echo "=== Base system installation ==="
 
@@ -12,12 +14,44 @@ deb http://fr.archive.ubuntu.com/ubuntu resolute-security main restricted univer
 EOF
 
 echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+
 apt update
 
 # NOTE (Ubuntu 26.04 "Resolute Raccoon") : dracut est désormais le générateur
 # d'initramfs par défaut. initramfs-tools reste packagé pour compatibilité et
 # est installé explicitement ci-dessous car casper (démarrage live) s'appuie
 # encore sur ses hooks. À surveiller lors des futures mises à jour de casper.
+
+# -----------------------
+# Locale de base
+# -----------------------
+# -----------------------
+echo "=== Installation de locales ==="
+
+apt-get install -y locales
+
+echo "=== Activation de en_US.UTF-8 ==="
+
+grep -qxF 'en_US.UTF-8 UTF-8' /etc/locale.gen || \
+    echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen
+
+locale-gen en_US.UTF-8
+
+echo "=== Vérification locale ==="
+locale -a
+
+grep -qx 'en_US.utf8' < <(locale -a) || {
+    echo "ERROR: en_US.UTF-8 absente"
+    exit 1
+}
+
+cat > /etc/default/locale <<'EOF'
+LANG=en_US.UTF-8
+LANGUAGE=en_US:en
+EOF
+
+export LANG=en_US.UTF-8
+export LANGUAGE=en_US:en
 
 apt install -y \
     ubuntu-standard \
@@ -51,7 +85,12 @@ apt install -y \
     lightdm-gtk-greeter \
     libreoffice
 
-systemctl enable lightdm
+# -----------------------
+# Display manager : LightDM
+# -----------------------
+systemctl disable gdm3.service 2>/dev/null || true
+rm -f /etc/systemd/system/display-manager.service
+systemctl enable lightdm.service
 
 # -----------------------
 # Hostname
@@ -79,25 +118,6 @@ XKBVARIANT=""
 XKBOPTIONS=""
 BACKSPACE="guess"
 EOF
-
-# -----------------------
-# Locale English
-# -----------------------
-apt install -y locales
-
-sed -i 's/^# *en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
-
-locale-gen en_US.UTF-8
-
-cat > /etc/default/locale <<'EOF'
-LANG=en_US.UTF-8
-LANGUAGE=en_US:en
-LC_ALL=en_US.UTF-8
-EOF
-
-export LANG=en_US.UTF-8
-export LANGUAGE=en_US:en
-export LC_ALL=en_US.UTF-8
 
 # Remove ifupdown if present
 apt purge -y ifupdown || true
