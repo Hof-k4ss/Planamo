@@ -83,7 +83,9 @@ apt install -y \
     gvfs-backends \
     lightdm \
     lightdm-gtk-greeter \
-    libreoffice
+    libreoffice \
+    open-vm-tools \
+    open-vm-tools-desktop
 
 # -----------------------
 # Display manager : LightDM
