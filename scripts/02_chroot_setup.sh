@@ -20,8 +20,9 @@ sudo mkdir -p \
     "$ROOTFS/proc" \
     "$ROOTFS/sys"
 
+# Préparer resolv.conf pour le chroot sans laisser un fichier vide dans l'ISO
 sudo rm -f "$ROOTFS/etc/resolv.conf"
-sudo touch "$ROOTFS/etc/resolv.conf"
+sudo ln -s /run/systemd/resolve/stub-resolv.conf "$ROOTFS/etc/resolv.conf"
 
 echo "Mount des pseudo-filesystems..."
 sudo mount --bind /dev "$ROOTFS/dev"
