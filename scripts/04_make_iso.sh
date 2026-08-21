@@ -4,15 +4,15 @@ set -e
 WORKDIR="$(pwd)/work"
 ISODIR="$WORKDIR/iso"
 
-echo "=== Building PLANAMO ISO (UDF for >4GiB files) ==="
+echo "=== Building PLANAMO ISO ==="
+
+rm -f planamo.iso
 
 grub-mkrescue \
   -o planamo.iso \
   "$ISODIR" \
-  -- \
-  -as mkisofs \
   -iso-level 3 \
-  -full-iso9660-filenames \
-  -R -J \
+  -R \
+  -J
 
 echo "=== ISO BUILT SUCCESSFULLY ==="
