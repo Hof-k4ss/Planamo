@@ -9,6 +9,8 @@ cleanup() {
     sudo umount -lf "$ROOTFS/proc" 2>/dev/null || true
     sudo umount -lf "$ROOTFS/sys" 2>/dev/null || true
     sudo umount -lf "$ROOTFS/etc/resolv.conf" 2>/dev/null || true
+    sudo rm -f "$ROOTFS/etc/resolv.conf"
+    sudo ln -s /run/systemd/resolve/stub-resolv.conf "$ROOTFS/etc/resolv.conf"
 }
 trap cleanup EXIT
 
@@ -20,8 +22,10 @@ sudo mkdir -p \
     "$ROOTFS/proc" \
     "$ROOTFS/sys"
 
+# Préparer resolv.conf pour le chroot.
+# Le chroot doit utiliser le DNS fonctionnel de l'hôte.
 sudo rm -f "$ROOTFS/etc/resolv.conf"
-sudo touch "$ROOTFS/etc/resolv.conf"
+sudo cp -L /etc/resolv.conf "$ROOTFS/etc/resolv.conf"
 
 echo "Mount des pseudo-filesystems..."
 sudo mount --bind /dev "$ROOTFS/dev"
