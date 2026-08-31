@@ -3,11 +3,12 @@ set -e
 
 WORKDIR="$(pwd)/work"
 ISODIR="$WORKDIR/iso"
+VERSION="v2.0.0"
 
-echo "=== Building PLANAMO ISO (UDF for >4GiB files) ==="
+echo "=== Building PLANAMO ISO $VERSION ==="
 
 grub-mkrescue \
-  -o planamo.iso \
+  -o "planamo_${VERSION}.iso" \
   "$ISODIR" \
   -- \
   -as mkisofs \
