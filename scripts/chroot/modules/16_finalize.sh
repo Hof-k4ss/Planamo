@@ -382,7 +382,8 @@ EOF
 # CLEAN ISO
 # =============================================================================
 echo "=== Cleanup ==="
-
+apt-get update
+apt-get upgrade -y
 apt-get autoremove -y || true
 apt-get clean || true
 rm -rf /var/lib/apt/lists/*
