@@ -36,6 +36,7 @@ EOF
 # LIGHTDM
 # =============================================================================
 mkdir -p /etc/lightdm
+
 cat > /etc/lightdm/lightdm.conf << EOF
 [Seat:*]
 autologin-user=$USER_NAME
@@ -48,10 +49,12 @@ cat > "$HOME_DIR/.dmrc" << 'EOF'
 [Desktop]
 Session=xfce
 EOF
+
 chown "$USER_NAME:$USER_NAME" "$HOME_DIR/.dmrc" || true
 
 if [ ! -f /usr/share/xsessions/xfce.desktop ]; then
     mkdir -p /usr/share/xsessions
+
     cat > /usr/share/xsessions/xfce.desktop << 'EOF'
 [Desktop Entry]
 Name=Xfce Session
@@ -66,8 +69,11 @@ fi
 # IMAGES
 # =============================================================================
 SRC_DIR="/usr/share/planamo"
+
 mkdir -p "$PIC_DIR"
+
 cp -f "$SRC_DIR/"*.png "$PIC_DIR/" 2>/dev/null || true
+
 chown -R "$USER_NAME:$USER_NAME" "$PIC_DIR" || true
 
 # =============================================================================
@@ -75,13 +81,16 @@ chown -R "$USER_NAME:$USER_NAME" "$PIC_DIR" || true
 # =============================================================================
 cat > /usr/local/bin/planamo-set-wallpaper << 'EOF'
 #!/bin/bash
+
 WALL="/home/analyste/Pictures/wallpaper_sim.png"
+
 [ -f "$WALL" ] || exit 0
 
 for i in $(seq 1 40); do
     pgrep -x xfdesktop >/dev/null 2>&1 && break
     sleep 0.5
 done
+
 sleep 1
 
 for monitor in $(xrandr --query 2>/dev/null | awk '/ connected/{print $1}'); do
@@ -104,9 +113,11 @@ xfconf-query -c xfce4-desktop \
 
 xfdesktop --reload 2>/dev/null || true
 EOF
+
 chmod +x /usr/local/bin/planamo-set-wallpaper
 
 mkdir -p /etc/xdg/autostart
+
 cat > /etc/xdg/autostart/planamo-wallpaper.desktop << 'EOF'
 [Desktop Entry]
 Type=Application
@@ -195,20 +206,24 @@ mkdir -p "$XFCONF_DIR"
 cat > "$XFCONF_DIR/xfce4-screensaver.xml" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <channel name="xfce4-screensaver" version="1.0">
+
   <property name="saver" type="empty">
-    <property name="enabled" type="bool" value="true"/>
+    <property name="enabled" type="bool" value="false"/>
     <property name="mode" type="int" value="0"/>
     <property name="idle-activation-enabled" type="bool" value="false"/>
   </property>
+
   <property name="lock" type="empty">
-    <property name="enabled" type="bool" value="true"/>
+    <property name="enabled" type="bool" value="false"/>
     <property name="saver-activation" type="bool" value="false"/>
   </property>
+
   <property name="background" type="empty">
     <property name="type" type="string" value="image"/>
-    <property name="image" type="string" value="/home/analyste/Pictures/avatar_sim.png"/>
+    <property name="image" type="string" value="/home/analyste/Pictures/wallpaper_sim.png"/>
     <property name="mode" type="string" value="scaled"/>
   </property>
+
 </channel>
 EOF
 
@@ -220,10 +235,6 @@ cat > "$XFCONF_DIR/xfce4-power-manager.xml" << 'EOF'
     <property name="blank-on-ac" type="int" value="0"/>
     <property name="dpms-on-ac-sleep" type="uint" value="0"/>
     <property name="dpms-on-ac-off" type="uint" value="0"/>
-    <property name="lid-action-on-ac" type="uint" value="0"/>
-    <property name="lid-action-on-battery" type="uint" value="0"/>
-    <property name="sleep-button-action" type="uint" value="0"/>
-    <property name="hibernate-button-action" type="uint" value="0"/>
   </property>
 </channel>
 EOF
@@ -258,6 +269,7 @@ Exec=/usr/local/bin/rtfm
 Icon=help-browser
 Type=Application
 EOF
+
 make_trusted_desktop "$HOME_DIR/Desktop/PLANAMO-Documentation.desktop"
 
 cat > "$HOME_DIR/Desktop/Install-PLANAMO.desktop" << 'EOF'
@@ -268,9 +280,11 @@ Exec=xterm -e "sudo /usr/local/bin/planamo-install"
 Icon=system-software-install
 Type=Application
 EOF
+
 make_trusted_desktop "$HOME_DIR/Desktop/Install-PLANAMO.desktop"
 
 cp "$HOME_DIR/Desktop/"*.desktop /etc/skel/Desktop/
+
 chmod 0755 /etc/skel/Desktop/*.desktop
 
 chown -R "$USER_NAME:$USER_NAME" "$HOME_DIR/Desktop"
@@ -322,8 +336,12 @@ EOF
 # AVATAR
 # =============================================================================
 if [ -f "$PIC_DIR/avatar_sim.png" ]; then
-    mkdir -p /var/lib/AccountsService/icons /var/lib/AccountsService/users
-    cp -f "$PIC_DIR/avatar_sim.png" "/var/lib/AccountsService/icons/$USER_NAME"
+    mkdir -p /var/lib/AccountsService/icons
+    mkdir -p /var/lib/AccountsService/users
+
+    cp -f "$PIC_DIR/avatar_sim.png" \
+        "/var/lib/AccountsService/icons/$USER_NAME"
+
     cat > "/var/lib/AccountsService/users/$USER_NAME" << EOF
 [User]
 Icon=/var/lib/AccountsService/icons/$USER_NAME
@@ -340,17 +358,20 @@ for i in $(seq 1 40); do
     pgrep -x xfconfd >/dev/null 2>&1 && break
     sleep 0.5
 done
+
 sleep 1
 
 /usr/local/bin/planamo-set-wallpaper 2>/dev/null || true
 
 xfconf-query -c exo -p /preferred-applications/WebBrowser/command \
   --create -t string -s "firefox" 2>/dev/null || true
+
 xfconf-query -c exo -p /preferred-applications/WebBrowser/parameter \
   --create -t string -s "%s" 2>/dev/null || true
 
 xfconf-query -c exo -p /preferred-applications/TerminalEmulator/command \
   --create -t string -s "terminator" 2>/dev/null || true
+
 xfconf-query -c exo -p /preferred-applications/TerminalEmulator/parameter \
   --create -t string -s "-x" 2>/dev/null || true
 
@@ -359,11 +380,14 @@ xfconf-query -c exo -p /preferred-applications/FileManager/command \
 
 xfconf-query -c xfce4-mime-settings -p /default-web-browser \
   --create -t string -s "firefox" 2>/dev/null || true
+
 xfconf-query -c xfce4-mime-settings -p /default-terminal \
   --create -t string -s "terminator" 2>/dev/null || true
+
 xfconf-query -c xfce4-mime-settings -p /default-file-manager \
   --create -t string -s "thunar" 2>/dev/null || true
 EOF
+
 chmod +x /usr/local/bin/planamo-xfce-postlogin
 
 cat > /etc/xdg/autostart/planamo-xfce-postlogin.desktop << 'EOF'
@@ -382,10 +406,12 @@ EOF
 # CLEAN ISO
 # =============================================================================
 echo "=== Cleanup ==="
+
 apt-get update
 apt-get upgrade -y
 apt-get autoremove -y || true
 apt-get clean || true
+
 rm -rf /var/lib/apt/lists/*
 
 rm -rf /tmp/*
