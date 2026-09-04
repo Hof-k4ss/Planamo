@@ -15,6 +15,7 @@ apt install -y \
     python3-venv \
     python3-pip \
     python3-tk \
+    python3-dev \
     ca-certificates \
     fuse3 \
     default-jdk-headless
