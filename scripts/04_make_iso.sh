@@ -4,15 +4,17 @@ set -e
 WORKDIR="$(pwd)/work"
 ISODIR="$WORKDIR/iso"
 
-echo "=== Building PLANAMO ISO ==="
+VERSION="v2.0.0"
 
-rm -f planamo.iso
+echo "=== Building PLANAMO ISO $VERSION ==="
 
 grub-mkrescue \
-  -o planamo.iso \
+  -o "planamo_${VERSION}.iso" \
   "$ISODIR" \
+  -- \
+  -as mkisofs \
   -iso-level 3 \
-  -R \
-  -J
+  -full-iso9660-filenames \
+  -R -J
 
 echo "=== ISO BUILT SUCCESSFULLY ==="
